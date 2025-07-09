@@ -1,0 +1,25 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.10
+    commands:
+      - pip install --upgrade pip
+
+  pre_build:
+    commands:
+      - echo "No pre-build steps required"
+
+  build:
+    commands:
+      - echo "Zipping application for deployment..."
+      - zip -r deploy.zip . -x "*.git*" "venv/*"
+
+  post_build:
+    commands:
+      - echo "Build complete"
+
+artifacts:
+  files:
+    - deploy.zip

@@ -1,0 +1,27 @@
+{% extends "tasks/base.html" %}
+{% block title %}Habits{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Habits</h2>
+    <a href="{% url 'tasks:habit_create' %}" class="btn btn-primary">Add Habit</a>
+</div>
+{% if habits %}
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        {% for habit in habits %}
+            <div class="col">
+                <div class="card shadow-sm" style="background:rgb(184, 203, 255);">
+                    <div class="card-body">
+                        <h5 class="card-title mb-2">{{ habit.name }}</h5>
+                        <p class="card-text mb-1"><strong>Frequency:</strong> {{ habit.frequency }}</p>
+                        <p class="card-text"><strong>Last done:</strong> {{ habit.last_done }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info text-center">
+        No habits yet.
+    </div>
+{% endif %}
+{% endblock %}

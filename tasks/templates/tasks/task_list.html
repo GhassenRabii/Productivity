@@ -1,0 +1,27 @@
+{% extends "tasks/base.html" %}
+{% block title %}Tasks{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Tasks</h2>
+    <a href="{% url 'tasks:task_create' %}" class="btn btn-primary">Add Task</a>
+</div>
+{% if tasks %}
+    <ul class="list-group">
+        {% for task in tasks %}
+            <li class="list-group-item d-flex justify-content-between align-items-center" style="background:rgb(153, 153, 153);">
+                <div>
+                    <input type="checkbox" {% if task.completed %}checked{% endif %} disabled>
+                    <strong>{{ task.title }}</strong>
+                </div>
+                <span class="badge bg-{% if task.completed %}success{% else %}secondary{% endif %}">
+                    {% if task.completed %}Completed{% else %}Incomplete{% endif %}
+                </span>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <div class="alert alert-info text-center">
+        No tasks yet.
+    </div>
+{% endif %}
+{% endblock %}

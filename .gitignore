@@ -1,0 +1,13 @@
+# Python/Django
+*.pyc
+__pycache__/
+db.sqlite3
+myenv/
+.env
+
+# macOS
+.DS_Store
+
+# Editor swap files
+*.swp
+*.swo

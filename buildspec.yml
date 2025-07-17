@@ -13,14 +13,8 @@ phases:
 
   build:
     commands:
-      - echo "Zipping application for deployment..."
-      # The dot (.) means "zip everything here"
-      - zip -r deploy.zip . -x "*.git*" "venv/*"
-
-  post_build:
-    commands:
       - echo "Build complete"
 
 artifacts:
   files:
-    - deploy.zip
+    - '**/*'

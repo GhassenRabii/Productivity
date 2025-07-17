@@ -1,5 +1,5 @@
 asgiref==3.9.0
-Django==5.0.4
+Django==4.2.10
 djangorestframework==3.16.0
 drf-yasg==1.21.10
 inflection==0.5.1

@@ -3,7 +3,12 @@ set -e
 
 APP_DIR=/home/ec2-user/djangoapp
 
+# Ensure the app directory exists and has the correct owner/permissions
+sudo mkdir -p $APP_DIR
+sudo chown -R ec2-user:ec2-user $APP_DIR
+
 cd $APP_DIR
+
 
 # Setup Python venv if not present
 if [ ! -d "venv" ]; then

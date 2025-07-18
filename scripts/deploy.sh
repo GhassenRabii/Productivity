@@ -1,18 +1,20 @@
 #!/bin/bash
 set -e
 
-# Load env vars set by UserData
-source /home/ec2-user/.bash_profile
-
 APP_DIR=/home/ec2-user/djangoapp
+
+# Fix permissions recursively for this directory
+sudo chown -R ec2-user:ec2-user $APP_DIR
 
 cd $APP_DIR
 
-# Setup Python venv if not present
-if [ ! -d "venv" ]; then
-  python3 -m venv venv
+# Remove the venv if it exists (to ensure no permission issues)
+if [ -d "venv" ]; then
+  rm -rf venv
 fi
 
+# Now create the venv as ec2-user
+python3 -m venv venv
 source venv/bin/activate
 
 pip install --upgrade pip

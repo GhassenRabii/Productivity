@@ -1,49 +1,70 @@
 #!/bin/bash
 set -e
 
-# Only debug non-sensitive steps
-set -x
+# Uncomment the line below for debugging (prints all commands as they run)
+# set -x
+
+# Explicitly load env vars set by EC2 UserData
 source /home/ec2-user/.bash_profile
+
 APP_DIR=/home/ec2-user/djangoapp
+
+# Show who and where (safe for debugging)
 echo "Running as user: $(whoami)"
 echo "Present working dir: $(pwd)"
+echo "DJANGO_DB_SECRET_ARN = $DJANGO_DB_SECRET_ARN"
 echo "DJANGO_DB_HOST = $DJANGO_DB_HOST"
-sudo chown -R ec2-user:ec2-user $APP_DIR
-cd $APP_DIR
 
+# Ensure correct permissions for the application directory
+sudo chown -R ec2-user:ec2-user "$APP_DIR"
+
+cd "$APP_DIR"
+
+# Clean up any old venv to avoid permission issues
 if [ -d "venv" ]; then
   rm -rf venv
 fi
 
+# Create a new Python virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
+# Upgrade pip and install dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
 
-set +x  # Stop debug before secrets
-
+# Fetch DB credentials from AWS Secrets Manager (needs DJANGO_DB_SECRET_ARN set!)
 if [ -z "$DJANGO_DB_SECRET_ARN" ]; then
   echo "DJANGO_DB_SECRET_ARN is not set!"
   exit 1
 fi
 
-DB_SECRET=$(aws secretsmanager get-secret-value --secret-id $DJANGO_DB_SECRET_ARN --region eu-central-1 --query SecretString --output text)
-DB_USER=$(echo $DB_SECRET | python3 -c "import sys, json; print(json.load(sys.stdin)['username'])")
-DB_PASS=$(echo $DB_SECRET | python3 -c "import sys, json; print(json.load(sys.stdin)['password'])")
+DB_SECRET=$(aws secretsmanager get-secret-value --secret-id "$DJANGO_DB_SECRET_ARN" --region eu-central-1 --query SecretString --output text)
+DB_USER=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.stdin)['username'])")
+DB_PASS=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.stdin)['password'])")
+DB_NAME=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.stdin).get('dbname', 'productivitydb'))")
 
-export DJANGO_DB_USER=$DB_USER
-export DJANGO_DB_PASS=$DB_PASS
-export DJANGO_DB_HOST=${DJANGO_DB_HOST:-localhost}
+export DB_USER
+export DB_PASSWORD="$DB_PASS"
+export DB_HOST="${DJANGO_DB_HOST:-localhost}"
+export DB_NAME
 
-env | grep DJANGO
+# Show only non-sensitive envs for debug
+echo "DB_USER: $DB_USER"
+echo "DB_HOST: $DB_HOST"
+echo "DB_NAME: $DB_NAME"
 
+# Django manage.py commands
 python manage.py migrate --noinput
 python manage.py collectstatic --noinput
 
+# Restart Gunicorn (if enabled)
 sudo systemctl restart gunicorn || echo "Gunicorn restart skipped (not configured yet)"
 
+# Deactivate Python virtual environment
 deactivate
 
-# Unset secrets for extra security
-unset DJANGO_DB_USER DJANGO_DB_PASS DB_USER DB_PASS DB_SECRET
+# Optionally, unset secrets for good practice
+unset DB_PASS DB_USER DB_NAME DB_HOST
+
+echo "Deployment script completed successfully."

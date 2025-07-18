@@ -10,3 +10,6 @@ hooks:
     - location: scripts/deploy.sh
       timeout: 300
       runas: ec2-user
+      env:
+        DJANGO_DB_SECRET_ARN: "arn:aws:secretsmanager:eu-central-1:626635412937:secret:django-db-credentials-5urbxb"
+        DJANGO_DB_HOST: "django-postgres-db.c9002ck2m8ev.eu-central-1.rds.amazonaws.com"

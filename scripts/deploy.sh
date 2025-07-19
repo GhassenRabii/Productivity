@@ -33,6 +33,29 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
+# Create/Update Gunicorn systemd service for Django
+sudo tee /etc/systemd/system/gunicorn.service > /dev/null <<EOF
+[Unit]
+Description=gunicorn daemon for Django
+After=network.target
+
+[Service]
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/home/ec2-user/djangoapp
+Environment="PATH=/home/ec2-user/djangoapp/venv/bin"
+ExecStart=/home/ec2-user/djangoapp/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 mysite.wsgi
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Reload systemd to pick up new service
+sudo systemctl daemon-reload
+sudo systemctl enable gunicorn
+sudo systemctl restart gunicorn || echo "Gunicorn restart skipped (not configured yet)"
+
+
 # Fetch DB credentials from AWS Secrets Manager (needs DJANGO_DB_SECRET_ARN set!)
 if [ -z "$DJANGO_DB_SECRET_ARN" ]; then
   echo "DJANGO_DB_SECRET_ARN is not set!"

@@ -65,12 +65,14 @@ fi
 DB_SECRET=$(aws secretsmanager get-secret-value --secret-id "$DJANGO_DB_SECRET_ARN" --region eu-central-1 --query SecretString --output text)
 DB_USER=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.stdin)['username'])")
 DB_PASS=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.stdin)['password'])")
+DB_HOST=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.stdin).get('host', 'localhost'))")
 DB_NAME=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.stdin).get('dbname', 'productivitydb'))")
 
 export DB_USER
 export DB_PASSWORD="$DB_PASS"
-export DB_HOST="${DJANGO_DB_HOST:-localhost}"
+export DB_HOST
 export DB_NAME
+
 
 # Show only non-sensitive envs for debug
 echo "DB_USER: $DB_USER"

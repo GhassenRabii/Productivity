@@ -11,6 +11,15 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
 # Allowed hosts
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'django-alb-1073829644.eu-central-1.elb.amazonaws.com').split(',')
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://django-alb-1073829644.eu-central-1.elb.amazonaws.com",
+    # Add https://... if/when you use SSL!
+]
+
+# If using HTTP (not recommended for production, but fine for internal/testing)
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',

@@ -65,6 +65,7 @@ ExecStart=$APP_DIR/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 mysite.ws
 WantedBy=multi-user.target
 EOF
 
+
 sudo systemctl daemon-reload
 sudo systemctl enable gunicorn
 

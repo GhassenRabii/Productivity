@@ -45,7 +45,7 @@ echo "DB_HOST: $DB_HOST"
 echo "DB_NAME: $DB_NAME"
 
 # --- Gunicorn systemd service with env vars for Django ---
-sudo tee $GUNICORN_SVC > /dev/null <<EOF
+cat > /tmp/gunicorn.service <<EOF
 [Unit]
 Description=gunicorn daemon for Django
 After=network.target
@@ -64,6 +64,8 @@ ExecStart=$APP_DIR/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 mysite.ws
 [Install]
 WantedBy=multi-user.target
 EOF
+
+sudo mv /tmp/gunicorn.service $GUNICORN_SVC
 
 
 sudo systemctl daemon-reload

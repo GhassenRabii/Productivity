@@ -1,13 +1,15 @@
 #!/bin/bash
 set -e
 
-# Uncomment the line below for debugging (prints all commands as they run)
+# Uncomment for verbose debugging
 # set -x
 
 # Explicitly load env vars set by EC2 UserData
 source /home/ec2-user/.bash_profile
 
 APP_DIR=/home/ec2-user/djangoapp
+GUNICORN_SVC=/etc/systemd/system/gunicorn.service
+NGINX_DJANGO_CONF=/etc/nginx/conf.d/django.conf
 
 # Show who and where (safe for debugging)
 echo "Running as user: $(whoami)"
@@ -17,7 +19,6 @@ echo "DJANGO_DB_HOST = $DJANGO_DB_HOST"
 
 # Ensure correct permissions for the application directory
 sudo chown -R ec2-user:ec2-user "$APP_DIR"
-
 cd "$APP_DIR"
 
 # Clean up any old venv to avoid permission issues
@@ -33,8 +34,41 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Create/Update Gunicorn systemd service for Django
-sudo tee /etc/systemd/system/gunicorn.service > /dev/null <<EOF
+# --- Install and configure Nginx ---
+sudo yum install -y nginx
+
+# Nginx config for Django (serves static, proxies to Gunicorn)
+sudo tee $NGINX_DJANGO_CONF > /dev/null <<EOF
+server {
+    listen 80;
+    server_name _;  # Replace with your domain for SSL
+
+    location /static/ {
+        alias $APP_DIR/static/;
+        autoindex off;
+    }
+
+    location /media/ {
+        alias $APP_DIR/media/;
+        autoindex off;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+
+# Enable and start Nginx
+sudo systemctl enable nginx
+sudo systemctl restart nginx
+
+# --- Gunicorn systemd service ---
+sudo tee $GUNICORN_SVC > /dev/null <<EOF
 [Unit]
 Description=gunicorn daemon for Django
 After=network.target
@@ -42,19 +76,16 @@ After=network.target
 [Service]
 User=ec2-user
 Group=ec2-user
-WorkingDirectory=/home/ec2-user/djangoapp
-Environment="PATH=/home/ec2-user/djangoapp/venv/bin"
-ExecStart=/home/ec2-user/djangoapp/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 mysite.wsgi
+WorkingDirectory=$APP_DIR
+Environment="PATH=$APP_DIR/venv/bin"
+ExecStart=$APP_DIR/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 mysite.wsgi
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-# Reload systemd to pick up new service
 sudo systemctl daemon-reload
 sudo systemctl enable gunicorn
-sudo systemctl restart gunicorn || echo "Gunicorn restart skipped (not configured yet)"
-
 
 # Fetch DB credentials from AWS Secrets Manager (needs DJANGO_DB_SECRET_ARN set!)
 if [ -z "$DJANGO_DB_SECRET_ARN" ]; then
@@ -73,8 +104,6 @@ export DB_PASSWORD="$DB_PASS"
 export DB_HOST
 export DB_NAME
 
-
-# Show only non-sensitive envs for debug
 echo "DB_USER: $DB_USER"
 echo "DB_HOST: $DB_HOST"
 echo "DB_NAME: $DB_NAME"
@@ -83,8 +112,9 @@ echo "DB_NAME: $DB_NAME"
 python manage.py migrate --noinput
 python manage.py collectstatic --noinput
 
-# Restart Gunicorn (if enabled)
-sudo systemctl restart gunicorn || echo "Gunicorn restart skipped (not configured yet)"
+# Restart Gunicorn and Nginx for latest code/config
+sudo systemctl restart gunicorn
+sudo systemctl restart nginx
 
 # Deactivate Python virtual environment
 deactivate

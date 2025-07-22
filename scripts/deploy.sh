@@ -81,17 +81,22 @@ python manage.py collectstatic --noinput
 # --- Nginx setup ---
 sudo yum install -y nginx
 
-# Remove old/conflicting Nginx configs
-if [ -f /etc/nginx/conf.d/default.conf ]; then
-  sudo rm /etc/nginx/conf.d/default.conf
-fi
+# Remove ALL old/conflicting Nginx configs
+sudo rm -f /etc/nginx/conf.d/default.conf
+sudo rm -f /etc/nginx/conf.d/example_ssl.conf
+sudo rm -f /etc/nginx/conf.d/*.default
+sudo rm -f /etc/nginx/conf.d/*.bak
+
+# Remove the default server block in nginx.conf if it exists
+# This is safe even if it's already commented out or deleted
+sudo sed -i '/server\s*{/,/}/d' /etc/nginx/nginx.conf
 
 # Ensure server_names_hash_bucket_size is set
 if ! grep -q "server_names_hash_bucket_size" /etc/nginx/nginx.conf; then
   sudo sed -i '/http {/a \    server_names_hash_bucket_size 128;' /etc/nginx/nginx.conf
 fi
 
-# Nginx config for Django
+# Nginx config for Django (the only server block!)
 sudo tee $NGINX_DJANGO_CONF > /dev/null <<EOF
 server {
     listen 80;

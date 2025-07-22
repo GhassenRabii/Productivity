@@ -37,6 +37,10 @@ fi
 # --- Install Nginx if not installed ---
 sudo yum install -y nginx
 
+if ! grep -q "server_names_hash_bucket_size" /etc/nginx/nginx.conf; then
+  sudo sed -i '/http {/a \    server_names_hash_bucket_size 128;' /etc/nginx/nginx.conf
+fi
+
 # --- Nginx config for Django ---
 sudo tee $NGINX_DJANGO_CONF > /dev/null <<EOF
 server {

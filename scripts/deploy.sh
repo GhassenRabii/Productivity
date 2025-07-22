@@ -41,7 +41,7 @@ sudo yum install -y nginx
 sudo tee $NGINX_DJANGO_CONF > /dev/null <<EOF
 server {
     listen 80;
-    server_name _;  # Replace with your domain for SSL
+    server_name django-alb-1073829644.eu-central-1.elb.amazonaws.com;
 
     location /static/ {
         alias $APP_DIR/static/;

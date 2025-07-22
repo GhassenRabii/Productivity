@@ -79,6 +79,10 @@ python manage.py collectstatic --noinput
 # --- Nginx setup ---
 sudo yum install -y nginx
 
+# --- Fix static files permissions for Nginx ---
+sudo chmod -R 755 $APP_DIR/static
+sudo chown -R ec2-user:nginx $APP_DIR/static
+
 # Remove all default/extra Nginx conf.d files except django.conf
 sudo find /etc/nginx/conf.d/ ! -name 'django.conf' -type f -delete
 

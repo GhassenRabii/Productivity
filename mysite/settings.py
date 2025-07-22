@@ -95,7 +95,7 @@ DATABASES = {
         'NAME': os.environ.get('DB_NAME', 'productivitydb'),
         'USER': os.environ.get('DB_USER', 'dbadmin'),
         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', 'DJANGO_DB_HOST'),   # RDS endpoint here
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }

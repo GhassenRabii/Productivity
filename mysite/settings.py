@@ -15,7 +15,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Allowed hosts
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'django-alb-1073829644.eu-central-1.elb.amazonaws.com').split(',')
+ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
     "http://django-alb-1073829644.eu-central-1.elb.amazonaws.com",

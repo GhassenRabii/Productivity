@@ -1,14 +1,12 @@
 #!/bin/bash
 set -e
 
-# Uncomment for debug:
-# set -x
-
 source /home/ec2-user/.bash_profile
 
 APP_DIR=/home/ec2-user/djangoapp
 GUNICORN_SVC=/etc/systemd/system/gunicorn.service
 NGINX_DJANGO_CONF=/etc/nginx/conf.d/django.conf
+NGINX_CONF=/etc/nginx/nginx.conf
 
 echo "Running as user: $(whoami)"
 echo "Present working dir: $(pwd)"
@@ -81,22 +79,42 @@ python manage.py collectstatic --noinput
 # --- Nginx setup ---
 sudo yum install -y nginx
 
-# Remove ALL old/conflicting Nginx configs
-sudo rm -f /etc/nginx/conf.d/default.conf
-sudo rm -f /etc/nginx/conf.d/example_ssl.conf
-sudo rm -f /etc/nginx/conf.d/*.default
-sudo rm -f /etc/nginx/conf.d/*.bak
-
-# Remove the default server block in nginx.conf if it exists
-# This is safe even if it's already commented out or deleted
-sudo sed -i '/server\s*{/,/}/d' /etc/nginx/nginx.conf
-
-# Ensure server_names_hash_bucket_size is set
-if ! grep -q "server_names_hash_bucket_size" /etc/nginx/nginx.conf; then
-  sudo sed -i '/http {/a \    server_names_hash_bucket_size 128;' /etc/nginx/nginx.conf
+# Remove old/conflicting Nginx site configs
+if [ -f /etc/nginx/conf.d/default.conf ]; then
+  sudo rm /etc/nginx/conf.d/default.conf
 fi
 
-# Nginx config for Django (the only server block!)
+# --- Clean up /etc/nginx/nginx.conf if necessary ---
+# Remove any server or location blocks that shouldn't be there
+sudo cp $NGINX_CONF $NGINX_CONF.bak
+sudo tee $NGINX_CONF > /dev/null <<EOF
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log notice;
+pid /run/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '\$remote_addr - \$remote_user [\$time_local] "\$request" '
+                      '\$status \$body_bytes_sent "\$http_referer" '
+                      '"\$http_user_agent" "\$http_x_forwarded_for"';
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    include /etc/nginx/conf.d/*.conf;
+    server_names_hash_bucket_size 128;
+}
+EOF
+
+# --- Write our Django site config ---
 sudo tee $NGINX_DJANGO_CONF > /dev/null <<EOF
 server {
     listen 80;
@@ -125,7 +143,6 @@ EOF
 sudo nginx -t
 sudo systemctl enable nginx
 sudo systemctl restart nginx
-
 sudo systemctl restart gunicorn
 
 deactivate

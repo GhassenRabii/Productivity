@@ -80,6 +80,8 @@ python manage.py collectstatic --noinput
 sudo yum install -y nginx
 
 # --- Fix static files permissions for Nginx ---
+sudo chmod o+x /home/ec2-user
+sudo chmod o+x /home/ec2-user/djangoapp
 sudo chmod -R 755 $APP_DIR/static
 sudo chown -R ec2-user:nginx $APP_DIR/static
 

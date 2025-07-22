@@ -36,6 +36,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    path('', lambda request: HttpResponse("It works!"), name='home'),
     path('health/', health_check),
     path('admin/', admin.site.urls),
     path('tasks/', include('tasks.urls')),

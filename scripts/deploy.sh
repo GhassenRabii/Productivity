@@ -40,6 +40,10 @@ DB_PASS=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.
 DB_HOST=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.stdin)['host'])")
 DB_NAME=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.stdin)['dbname'])")
 
+export DB_USER
+export DB_PASSWORD="$DB_PASS"
+export DB_HOST
+export DB_NAME
 
 echo "DB_USER: $DB_USER"
 echo "DB_HOST: $DB_HOST"
@@ -67,8 +71,6 @@ WantedBy=multi-user.target
 EOF
 
 sudo mv /tmp/gunicorn.service $GUNICORN_SVC
-
-
 sudo systemctl daemon-reload
 sudo systemctl enable gunicorn
 

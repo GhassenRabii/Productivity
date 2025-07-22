@@ -79,13 +79,10 @@ python manage.py collectstatic --noinput
 # --- Nginx setup ---
 sudo yum install -y nginx
 
-# Remove old/conflicting Nginx site configs
-if [ -f /etc/nginx/conf.d/default.conf ]; then
-  sudo rm /etc/nginx/conf.d/default.conf
-fi
+# Remove all default/extra Nginx conf.d files except django.conf
+sudo find /etc/nginx/conf.d/ ! -name 'django.conf' -type f -delete
 
-# --- Clean up /etc/nginx/nginx.conf if necessary ---
-# Remove any server or location blocks that shouldn't be there
+# --- Clean up /etc/nginx/nginx.conf to remove any server blocks ---
 sudo cp $NGINX_CONF $NGINX_CONF.bak
 sudo tee $NGINX_CONF > /dev/null <<EOF
 user nginx;
@@ -148,3 +145,4 @@ sudo systemctl restart gunicorn
 deactivate
 
 echo "Deployment script completed successfully."
+

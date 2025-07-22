@@ -26,6 +26,7 @@ ALLOWED_HOSTS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "http://django-alb-1073829644.eu-central-1.elb.amazonaws.com",
+    "https://django-alb-1073829644.eu-central-1.elb.amazonaws.com"
     # Add https://... if/when you use SSL!
 ]
 

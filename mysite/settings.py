@@ -25,14 +25,13 @@ ALLOWED_HOSTS = [
 
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://django-alb-1073829644.eu-central-1.elb.amazonaws.com",
-    "https://django-alb-1073829644.eu-central-1.elb.amazonaws.com"
-    # Add https://... if/when you use SSL!
+    "https://django-alb-1073829644.eu-central-1.elb.amazonaws.com",
+    "https://productivity.dunedivision.com
 ]
 
 # If using HTTP (not recommended for production, but fine for internal/testing)
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 # Application definition
 INSTALLED_APPS = [

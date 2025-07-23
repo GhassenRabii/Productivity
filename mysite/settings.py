@@ -8,30 +8,41 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'changeme-in-production')
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
 
+# Static and media
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')  # as you have it
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Allowed hosts
 ALLOWED_HOSTS = [
     'django-alb-1073829644.eu-central-1.elb.amazonaws.com',
-    '10.0.101.95',
+    'productivity.dunedivision.com',
     'localhost',
-    '127.0.0.1',
-    '*',  # For testing only!
+    '127.0.0.1'
+   
 ]
 
-
+# CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
     "https://django-alb-1073829644.eu-central-1.elb.amazonaws.com",
-    "https://productivity.dunedivision.com
+    "https://productivity.dunedivision.com"
 ]
 
-# If using HTTP (not recommended for production, but fine for internal/testing)
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+# Security for production/HTTPS
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = True
+else:
+    SECURE_SSL_REDIRECT = False
+
+# (optional, sometimes needed for ALB SSL termination)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 INSTALLED_APPS = [
@@ -122,26 +133,8 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (collectstatic will put everything here)
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
-
-# Media files (optional, if you need user uploads)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
-
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Secure cookies (optional, recommended for prod)
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
-
-# HSTS settings (recommended for prod)
-if not DEBUG:
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
 
 # XSS & content security (optional for prod)
 SECURE_BROWSER_XSS_FILTER = True
@@ -150,7 +143,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 # Logging configuration for AWS/production
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,  # keep the default Django loggers
+    'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
             'format': '[{levelname}] {asctime} {name} {message}',

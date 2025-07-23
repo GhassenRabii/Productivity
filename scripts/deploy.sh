@@ -76,6 +76,37 @@ sudo systemctl enable gunicorn
 python manage.py migrate --noinput
 python manage.py collectstatic --noinput
 
+# --- Create/ensure a Django superuser (temp password) ---
+DJ_SUPERUSER_NAME=${DJ_SUPERUSER_NAME:-admin}
+DJ_SUPERUSER_EMAIL=${DJ_SUPERUSER_EMAIL:-admin@example.com}
+DJ_SUPERUSER_PASSWORD=${DJ_SUPERUSER_PASSWORD:-$(openssl rand -base64 20)}
+
+# store temp password so you can read it once (delete later!)
+echo "$DJ_SUPERUSER_PASSWORD" > /home/ec2-user/.django_admin_tmp_pwd
+chmod 600 /home/ec2-user/.django_admin_tmp_pwd
+
+python manage.py shell <<'PYCODE'
+import os
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+name  = os.environ["DJ_SUPERUSER_NAME"]
+email = os.environ["DJ_SUPERUSER_EMAIL"]
+pwd   = os.environ["DJ_SUPERUSER_PASSWORD"]
+
+u, created = User.objects.get_or_create(username=name, defaults={"email": email})
+u.is_staff = True
+u.is_superuser = True
+if created:
+    u.set_password(pwd)
+    u.save()
+    print(f"[+] Superuser '{name}' created.")
+else:
+    print(f"[=] Superuser '{name}' already exists. Password unchanged.")
+PYCODE
+echo "Temp admin password saved to /home/ec2-user/.django_admin_tmp_pwd"
+
+
 # --- Nginx setup ---
 sudo yum install -y nginx
 

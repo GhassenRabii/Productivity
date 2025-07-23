@@ -140,6 +140,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
+# Tell Django it's behind a proxy that terminates SSL (for ALB/ELB)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Logging configuration for AWS/production
 LOGGING = {
     'version': 1,

@@ -88,7 +88,7 @@ export DJ_SUPERUSER_NAME DJ_SUPERUSER_EMAIL DJ_SUPERUSER_PASSWORD
 echo "$DJ_SUPERUSER_PASSWORD" > /home/ec2-user/.django_admin_tmp_pwd
 chmod 600 /home/ec2-user/.django_admin_tmp_pwd
 
-python manage.py shell <<'PYCODE' || true
+python manage.py shell <<'PYCODE'
 import os
 from django.contrib.auth import get_user_model
 User = get_user_model()

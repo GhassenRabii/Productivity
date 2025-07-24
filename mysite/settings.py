@@ -14,14 +14,13 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
-# Allowed hosts
+# Allowed hosts (fixed comma)
 ALLOWED_HOSTS = [
     'django-alb-1073829644.eu-central-1.elb.amazonaws.com',
     'productivity.dunedivision.com',
     'localhost',
-    '127.0.0.1'
+    '127.0.0.1',
     '10.0.101.95'
-   
 ]
 
 # CSRF trusted origins
@@ -37,16 +36,16 @@ SESSION_COOKIE_SECURE = not DEBUG
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 if not DEBUG:
-    SECURE_HSTS_SECONDS = 0  # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
-    SECURE_HSTS_PRELOAD = False
-    SECURE_SSL_REDIRECT = False
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = True
 else:
     SECURE_SSL_REDIRECT = False
 
-
 # Application definition
 INSTALLED_APPS = [
+    'corsheaders',  # Add this at the top
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,6 +58,37 @@ INSTALLED_APPS = [
     'drf_yasg'
 ]
 
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Add this at the top
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# CORS config (secure - only allow your prod domain)
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "https://productivity.dunedivision.com",
+]
+CORS_ALLOW_CREDENTIALS = True
+
+# Swagger (drf-yasg) HTTPS config
+SWAGGER_SETTINGS = {
+    "DEFAULT_API_URL": "https://productivity.dunedivision.com",
+    "USE_SESSION_AUTH": False,
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    },
+}
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
@@ -70,16 +100,6 @@ REST_FRAMEWORK = {
 }
 
 LOGIN_REDIRECT_URL = '/tasks/'
-
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
 
 ROOT_URLCONF = 'mysite.urls'
 
@@ -137,12 +157,9 @@ USE_TZ = True
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# XSS & content security (optional for prod)
+# XSS & content security
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-
-# Tell Django it's behind a proxy that terminates SSL (for ALB/ELB)
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Logging configuration for AWS/production
 LOGGING = {

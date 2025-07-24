@@ -20,6 +20,7 @@ ALLOWED_HOSTS = [
     'productivity.dunedivision.com',
     'localhost',
     '127.0.0.1'
+    '10.0.101.95'
    
 ]
 

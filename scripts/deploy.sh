@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 source /home/ec2-user/.bash_profile
 
@@ -8,46 +8,41 @@ GUNICORN_SVC=/etc/systemd/system/gunicorn.service
 NGINX_DJANGO_CONF=/etc/nginx/conf.d/django.conf
 NGINX_CONF=/etc/nginx/nginx.conf
 
-echo "Running as user: $(whoami)"
-echo "Present working dir: $(pwd)"
+echo "[*] Running as user: $(whoami)"
+echo "[*] Current directory: $(pwd)"
 
-# Ensure correct permissions for the app directory
-sudo chown -R ec2-user:ec2-user "$APP_DIR"
+# Check for required env var
+if [ -z "${DJANGO_DB_SECRET_ARN:-}" ]; then
+  echo "ERROR: DJANGO_DB_SECRET_ARN is not set!"
+  exit 1
+fi
+
 cd "$APP_DIR"
+sudo chown -R ec2-user:ec2-user "$APP_DIR"
 
-# Clean old virtualenv if present
+# Clean and recreate virtualenv
 if [ -d "venv" ]; then
   rm -rf venv
 fi
-
-# Setup Python venv and install dependencies
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
 # --- Fetch DB credentials from AWS Secrets Manager ---
-if [ -z "$DJANGO_DB_SECRET_ARN" ]; then
-  echo "DJANGO_DB_SECRET_ARN is not set!"
-  exit 1
-fi
-
 DB_SECRET=$(aws secretsmanager get-secret-value --secret-id "$DJANGO_DB_SECRET_ARN" --region eu-central-1 --query SecretString --output text)
 DB_USER=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.stdin)['username'])")
 DB_PASS=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.stdin)['password'])")
 DB_HOST=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.stdin)['host'])")
 DB_NAME=$(echo "$DB_SECRET" | python3 -c "import sys, json; print(json.load(sys.stdin)['dbname'])")
 
-export DB_USER
-export DB_PASSWORD="$DB_PASS"
-export DB_HOST
-export DB_NAME
+export DB_USER DB_PASSWORD="$DB_PASS" DB_HOST DB_NAME
 
-echo "DB_USER: $DB_USER"
-echo "DB_HOST: $DB_HOST"
-echo "DB_NAME: $DB_NAME"
+echo "[*] DB_USER: $DB_USER"
+echo "[*] DB_HOST: $DB_HOST"
+echo "[*] DB_NAME: $DB_NAME"
 
-# --- Gunicorn systemd service with env vars for Django ---
+# --- Gunicorn systemd service ---
 cat > /tmp/gunicorn.service <<EOF
 [Unit]
 Description=gunicorn daemon for Django
@@ -72,63 +67,23 @@ sudo mv /tmp/gunicorn.service $GUNICORN_SVC
 sudo systemctl daemon-reload
 sudo systemctl enable gunicorn
 
-# Run migrations and collectstatic
+# --- Django management commands ---
 python manage.py migrate --noinput
 python manage.py collectstatic --noinput
-
-# --- Create/ensure a Django superuser (temp password) ---
-DJ_SUPERUSER_NAME=${DJ_SUPERUSER_NAME:-admin}
-DJ_SUPERUSER_EMAIL=${DJ_SUPERUSER_EMAIL:-admin@example.com}
-DJ_SUPERUSER_PASSWORD=${DJ_SUPERUSER_PASSWORD:-$(openssl rand -base64 20)}
-
-# make them visible to python
-export DJ_SUPERUSER_NAME DJ_SUPERUSER_EMAIL DJ_SUPERUSER_PASSWORD
-
-# store temp password so you can read it once (delete later!)
-echo "$DJ_SUPERUSER_PASSWORD" > /home/ec2-user/.django_admin_tmp_pwd
-chmod 600 /home/ec2-user/.django_admin_tmp_pwd
-
-python manage.py shell <<'PYCODE'
-import os
-from django.contrib.auth import get_user_model
-User = get_user_model()
-
-name  = os.environ.get("DJ_SUPERUSER_NAME", "admin")
-email = os.environ.get("DJ_SUPERUSER_EMAIL", "admin@example.com")
-pwd   = os.environ.get("DJ_SUPERUSER_PASSWORD", "changeme123")
-
-u, created = User.objects.get_or_create(username=name, defaults={"email": email})
-u.is_staff = True
-u.is_superuser = True
-if created:
-    u.set_password(pwd)
-    u.save()
-    print(f"[+] Superuser '{name}' created.")
-else:
-    # don't silently change password
-    if not (u.is_staff and u.is_superuser):
-        u.is_staff = True
-        u.is_superuser = True
-        u.save()
-    print(f"[=] Superuser '{name}' already exists. Password NOT changed.")
-PYCODE
-
-echo "Temp admin password saved to /home/ec2-user/.django_admin_tmp_pwd"
-
 
 # --- Nginx setup ---
 sudo yum install -y nginx
 
-# --- Fix static files permissions for Nginx ---
+# Set correct permissions for static files
 sudo chmod o+x /home/ec2-user
 sudo chmod o+x /home/ec2-user/djangoapp
 sudo chmod -R 755 $APP_DIR/static
 sudo chown -R ec2-user:nginx $APP_DIR/static
 
-# Remove all default/extra Nginx conf.d files except django.conf
+# Remove default nginx conf.d files except our config
 sudo find /etc/nginx/conf.d/ ! -name 'django.conf' -type f -delete
 
-# --- Clean up /etc/nginx/nginx.conf to remove any server blocks ---
+# Minimal /etc/nginx/nginx.conf
 sudo cp $NGINX_CONF $NGINX_CONF.bak
 sudo tee $NGINX_CONF > /dev/null <<EOF
 user nginx;
@@ -157,7 +112,7 @@ http {
 }
 EOF
 
-# --- Write our Django site config ---
+# Write Nginx Django site config
 sudo tee $NGINX_DJANGO_CONF > /dev/null <<EOF
 server {
     listen 80;
@@ -190,5 +145,5 @@ sudo systemctl restart gunicorn
 
 deactivate
 
-echo "Deployment script completed successfully."
-
+echo "[*] Deployment script completed successfully."
+echo "[*] Remember: Superusers must be created manually for security."

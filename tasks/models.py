@@ -37,6 +37,7 @@ class Habit(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
     notes = models.TextField(blank=True)
+    tags = models.CharField(max_length=100, blank=True, help_text="Comma-separated tags, e.g. Ideas, Work")
 
     def __str__(self):
         return self.name

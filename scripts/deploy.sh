@@ -6,20 +6,13 @@ source /home/ec2-user/.bash_profile
 # --- Install PostgreSQL 15 client ---
 echo "[*] Installing PostgreSQL 15 client..."
 
-# Install official PostgreSQL repo
-sudo dnf install -y https://download.postgresql.org/pub/repos/yum/15/redhat/rhel-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+# --- Install PostgreSQL client for Amazon Linux 2023 ---
+echo "[*] Installing PostgreSQL client (Amazon Linux 2023)..."
 
-# Disable any default PostgreSQL module
-sudo dnf -qy module disable postgresql || true
-
-# Install only the client tools (not the server)
-sudo dnf install -y postgresql15
-
-# Add to PATH for this session and future logins
-echo 'export PATH=/usr/pgsql-15/bin:$PATH' >> ~/.bash_profile
-export PATH=/usr/pgsql-15/bin:$PATH
+sudo dnf install -y postgresql
 
 echo "[*] PostgreSQL client installed: $(psql --version)"
+
 
 APP_DIR=/home/ec2-user/djangoapp
 GUNICORN_SVC=/etc/systemd/system/gunicorn.service

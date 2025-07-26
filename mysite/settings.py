@@ -6,7 +6,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Secret key and debug
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'changeme-in-production')
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
+DEBUG = True
+#DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
 
 # Static and media
 STATIC_URL = '/static/'

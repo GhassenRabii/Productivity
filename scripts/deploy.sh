@@ -3,15 +3,14 @@ set -euo pipefail
 
 source /home/ec2-user/.bash_profile
 
-# --- Install PostgreSQL 15 client ---
-echo "[*] Installing PostgreSQL 15 client..."
+# --- Install PostgreSQL client on Amazon Linux 2023 ---
+echo "[*] Installing PostgreSQL client on Amazon Linux 2023..."
 
-# --- Install PostgreSQL client for Amazon Linux 2023 ---
-echo "[*] Installing PostgreSQL client (Amazon Linux 2023)..."
-
-sudo dnf install -y postgresql
+# Enable the PostgreSQL extra (built-in Amazon repo)
+sudo dnf install -y postgresql12
 
 echo "[*] PostgreSQL client installed: $(psql --version)"
+
 
 
 APP_DIR=/home/ec2-user/djangoapp

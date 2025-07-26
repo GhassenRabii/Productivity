@@ -12,6 +12,11 @@
                 <div class="card h-100 shadow-sm" style="background:rgb(255, 255, 192);">
                     <div class="card-body">
                         <h5 class="card-title">{{ note.title }}</h5>
+                        {% if note.tags %}
+                            <div class="mb-2">
+                                <span class="badge bg-warning text-dark">{{ note.tags }}</span>
+                            </div>
+                        {% endif %}
                         <p class="card-text">{{ note.content|truncatechars:120 }}</p>
                     </div>
                     <div class="card-footer text-muted small">

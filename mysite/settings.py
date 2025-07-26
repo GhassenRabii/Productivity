@@ -17,15 +17,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 # Allowed hosts (fixed comma)
 ALLOWED_HOSTS = [
     'django-alb-1073829644.eu-central-1.elb.amazonaws.com',
+    'django-albv2-695122914.eu-central-1.elb.amazonaws.com',
     'productivity.dunedivision.com',
     'localhost',
     '127.0.0.1',
-    '10.0.101.95'
+    '10.0.101.95',
+    '10.0.101.183'
 ]
 
 # CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
     "https://django-alb-1073829644.eu-central-1.elb.amazonaws.com",
+    "https://django-albv2-695122914.eu-central-1.elb.amazonaws.com",
     "https://productivity.dunedivision.com"
 ]
 
@@ -36,7 +39,7 @@ SESSION_COOKIE_SECURE = not DEBUG
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 if not DEBUG:
-    SECURE_HSTS_SECONDS = 0  # 1 year
+    SECURE_HSTS_SECONDS = 0  
     SECURE_HSTS_INCLUDE_SUBDOMAINS = False
     SECURE_HSTS_PRELOAD = False
     SECURE_SSL_REDIRECT = False

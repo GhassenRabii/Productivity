@@ -7,6 +7,7 @@ class Task(models.Model):
         ('Medium', 'Medium'),
         ('High', 'High'),
     ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
     title = models.CharField(max_length=200)
     completed = models.BooleanField(default=False)
     due_date = models.DateTimeField(null=True, blank=True)
@@ -27,6 +28,7 @@ class Habit(models.Model):
         ('Weekly', 'Weekly'),
         ('Monthly', 'Monthly'),
     ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
     name = models.CharField(max_length=200)
     frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, default='Daily')
     last_done = models.DateField(null=True, blank=True)
@@ -40,6 +42,7 @@ class Habit(models.Model):
 
 # -------------- NOTE MODEL --------------
 class Note(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
     title = models.CharField(max_length=200)
     content = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
@@ -51,6 +54,7 @@ class Note(models.Model):
 
 # -------------- EVENT MODEL --------------
 class Event(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
     title = models.CharField(max_length=200)
     event_date = models.DateTimeField()
     location = models.CharField(max_length=200, blank=True)

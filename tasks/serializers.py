@@ -4,19 +4,23 @@ from .models import Task, Habit, Note, Event
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = '__all__'
+        fields = ['id', 'title', 'completed', 'user']
+        read_only_fields = ['user']
 
 class HabitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Habit
-        fields = '__all__'
+        fields = ['id', 'name', 'frequency', 'last_done', 'user']
+        read_only_fields = ['user']
 
 class NoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Note
-        fields = '__all__'
+        fields = ['id', 'title', 'content', 'created', 'user']
+        read_only_fields = ['user', 'created']
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        fields = '__all__'
+        fields = ['id', 'title', 'event_date', 'description', 'user']
+        read_only_fields = ['user']

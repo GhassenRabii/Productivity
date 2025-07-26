@@ -13,7 +13,14 @@
                     <div class="card-body">
                         <h5 class="card-title mb-2">{{ habit.name }}</h5>
                         <p class="card-text mb-1"><strong>Frequency:</strong> {{ habit.frequency }}</p>
-                        <p class="card-text"><strong>Last done:</strong> {{ habit.last_done }}</p>
+                        <p class="card-text mb-1"><strong>Streak:</strong> {{ habit.streak }}</p>
+                        <p class="card-text mb-1"><strong>Last done:</strong> {{ habit.last_done|default:"Never" }}</p>
+                        {% if habit.tags %}
+                          <p class="mb-1"><span class="badge bg-info">{{ habit.tags }}</span></p>
+                        {% endif %}
+                        {% if habit.notes %}
+                          <p class="card-text"><em>{{ habit.notes }}</em></p>
+                        {% endif %}
                     </div>
                 </div>
             </div>

@@ -87,6 +87,15 @@
 
 <!-- Main content area -->
 <div class="container main-card">
+    <!-- Messages -->
+    {% if messages %}
+      <div>
+        {% for message in messages %}
+          <div class="alert alert-info">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
     {% block content %}
     <!-- Page-specific content will be inserted here -->
     {% endblock %}
@@ -95,7 +104,11 @@
 <!-- Footer -->
 <footer class="footer mt-auto py-3 text-dark-50">
   <div class="container text-center">
-    <small>&copy; {{ year|default:2025 }} Productivity</small>
+    <div class="mb-2">
+        <a href="/swagger/" target="_blank" class="link-secondary mx-2">Swagger API Docs</a> |
+        <a href="/redoc/" target="_blank" class="link-secondary mx-2">Redoc Docs</a>
+    </div>
+    <small>&copy; {% now "Y" %} Productivity</small>
   </div>
 </footer>
 

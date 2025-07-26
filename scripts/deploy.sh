@@ -3,16 +3,6 @@ set -euo pipefail
 
 source /home/ec2-user/.bash_profile
 
-# --- Install PostgreSQL client on Amazon Linux 2023 ---
-echo "[*] Installing PostgreSQL client on Amazon Linux 2023..."
-
-# Enable the PostgreSQL extra (built-in Amazon repo)
-sudo dnf install -y postgresql12
-
-echo "[*] PostgreSQL client installed: $(psql --version)"
-
-
-
 APP_DIR=/home/ec2-user/djangoapp
 GUNICORN_SVC=/etc/systemd/system/gunicorn.service
 NGINX_DJANGO_CONF=/etc/nginx/conf.d/django.conf

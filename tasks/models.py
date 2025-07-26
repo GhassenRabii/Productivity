@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # -------------- TASK MODEL --------------
 class Task(models.Model):
@@ -28,10 +29,10 @@ class Habit(models.Model):
         ('Weekly', 'Weekly'),
         ('Monthly', 'Monthly'),
     ]
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='habits')
     name = models.CharField(max_length=200)
     frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, default='Daily')
-    last_done = models.DateField(null=True, blank=True)
+    last_done = models.DateTimeField(null=True, blank=True)
     streak = models.IntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
@@ -42,7 +43,7 @@ class Habit(models.Model):
 
 # -------------- NOTE MODEL --------------
 class Note(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notes')
     title = models.CharField(max_length=200)
     content = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
@@ -54,7 +55,7 @@ class Note(models.Model):
 
 # -------------- EVENT MODEL --------------
 class Event(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='events')
     title = models.CharField(max_length=200)
     event_date = models.DateTimeField()
     location = models.CharField(max_length=200, blank=True)
@@ -66,4 +67,3 @@ class Event(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.event_date.strftime('%Y-%m-%d %H:%M')})"
-

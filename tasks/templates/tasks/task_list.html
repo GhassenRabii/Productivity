@@ -1,9 +1,10 @@
 {% extends "tasks/base.html" %}
+{% load group_tags %}
 {% block title %}Tasks{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Tasks</h2>
-    {% if request.user.groups.filter(name="users").exists %}
+    {% if in_group request.user "users" %}
       <a href="{% url 'tasks:task_create' %}" class="btn btn-primary">Add Task</a>
     {% endif %}
 </div>
@@ -28,7 +29,7 @@
                     <span class="badge bg-{% if task.completed %}success{% else %}secondary{% endif %} ms-md-2 me-3">
                         {% if task.completed %}Completed{% else %}Incomplete{% endif %}
                     </span>
-                    {% if request.user.groups.filter(name__in=["admin","dev"]).exists %}
+                    {% if in_groups request.user "admin" "dev" %}
                       <form action="{% url 'tasks:task_delete' task.pk %}" method="post" style="display:inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>

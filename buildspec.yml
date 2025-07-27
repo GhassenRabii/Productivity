@@ -2,9 +2,10 @@ version: 0.2
 
 env:
   variables:
-    GITHUB_REPO: "https://github.com/GhassenRabii/Productivity"
-  # Secure environment variables set in CodeBuild project, not in source:
-  #   GITHUB_TOKEN (GitHub PAT with content write scope)
+    GITHUB_REPO: "github.com/GhassenRabii/Productivity"
+  # In CodeBuild console:
+  #   - GITHUB_TOKEN: your PAT with repo:contents (or repo) scope
+
 phases:
   install:
     runtime-versions:
@@ -14,29 +15,33 @@ phases:
       - pip install --upgrade pip
       - cd $CODEBUILD_SRC_DIR
       - pip install -r requirements.txt
-      - cd $CODEBUILD_SRC_DIR
 
   pre_build:
     commands:
-      - echo "Skipping dry-run to avoid failures; proceeding to generate migrations"
+      - echo "Configuring Git remote for authenticated pushes…"
+      - git remote set-url origin "https://${GITHUB_TOKEN}@${GITHUB_REPO}"
+      - git fetch origin main
 
-build:
+  build:
     commands:
       - echo "Generating migrations…"
       - python manage.py makemigrations --noinput
+
+      - echo "Detecting newly created migrations…"
       - |
-        # Detect added migration files
-        NEW=$(git status --porcelain tasks/migrations | awk '/^ ?A/ {print $2}')
+        NEW=$(git diff --name-only origin/main HEAD -- tasks/migrations)
         if [ -n "$NEW" ]; then
           echo "🛠 New migrations detected:"
           echo "$NEW"
           git config user.email "ci-bot@yourdomain.com"
-          git config user.name  "CI Bot"
+          git config user.name "CI Bot"
           git add tasks/migrations
           git commit -m "ci: auto-generate migrations [skip ci]"
-          echo "Pushing to GitHub…"
-          # Use the secured env var GITHUB_TOKEN for auth
-          git push "https://${GITHUB_TOKEN}@${GITHUB_REPO}" HEAD:main
+          echo "Pushing migrations to GitHub…"
+          if ! git push origin HEAD:main; then
+            echo "❌ ERROR: git push failed"
+            exit 1
+          fi
         else
           echo "✅ No new migrations."
         fi

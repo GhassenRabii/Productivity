@@ -31,6 +31,11 @@
         {{ form.tags.label_tag }} {{ form.tags }}
         {{ form.tags.errors }}
     </div>
+    <div class="mb-3">
+        {{ form.groups.label_tag }}<br>
+        {{ form.groups }}
+        {{ form.groups.errors }}
+    </div>
     <button type="submit" class="btn btn-success">Save</button>
 </form>
 {% endblock %}

@@ -151,33 +151,46 @@ class EventDetailAPI(generics.RetrieveUpdateDestroyAPIView):
 # --- WEB VIEWS WITH FEEDBACK AND USER DATA ---
 @login_required
 def task_list(request):
-    tasks = Task.objects.filter(user=request.user)
-    paginator = Paginator(tasks, 10)
-    page = request.GET.get('page')
-    tasks_page = paginator.get_page(page)
+    user = request.user
+    own    = Task.objects.filter(user=user)
+    shared = Task.objects.filter(groups__in=user.groups.all())
+    tasks  = (own | shared).distinct()
+    paginator    = Paginator(tasks, 10)
+    page         = request.GET.get('page')
+    tasks_page   = paginator.get_page(page)
     return render(request, 'tasks/task_list.html', {'tasks': tasks_page})
 
 @login_required
 def habit_list(request):
-    habits = Habit.objects.filter(user=request.user)
-    paginator = Paginator(habits, 10)
-    page = request.GET.get('page')
-    habits_page = paginator.get_page(page)
+    user    = request.user
+    own      = Habit.objects.filter(user=user)
+    shared   = Habit.objects.filter(groups__in=user.groups.all())
+    habits   = (own | shared).distinct()
+    paginator  = Paginator(habits, 10)
+    page       = request.GET.get('page')
+    habits_page= paginator.get_page(page)
     return render(request, 'tasks/habit_list.html', {'habits': habits_page})
+
 
 @login_required
 def note_list(request):
-    notes = Note.objects.filter(user=request.user)
-    paginator = Paginator(notes, 10)
-    page = request.GET.get('page')
+    user    = request.user
+    own      = Note.objects.filter(user=user)
+    shared   = Note.objects.filter(groups__in=user.groups.all())
+    notes    = (own | shared).distinct()
+    paginator  = Paginator(notes, 10)
+    page       = request.GET.get('page')
     notes_page = paginator.get_page(page)
     return render(request, 'tasks/note_list.html', {'notes': notes_page})
 
 @login_required
 def event_list(request):
-    events = Event.objects.filter(user=request.user)
-    paginator = Paginator(events, 10)
-    page = request.GET.get('page')
+    user     = request.user
+    own       = Event.objects.filter(user=user)
+    shared    = Event.objects.filter(groups__in=user.groups.all())
+    events    = (own | shared).distinct()
+    paginator   = Paginator(events, 10)
+    page        = request.GET.get('page')
     events_page = paginator.get_page(page)
     return render(request, 'tasks/event_list.html', {'events': events_page})
 
@@ -189,6 +202,7 @@ def task_create(request):
             obj = form.save(commit=False)
             obj.user = request.user
             obj.save()
+            form.save_m2m()
             messages.success(request, 'Task created!')
             return redirect('tasks:task_list')
     else:
@@ -203,6 +217,7 @@ def habit_create(request):
             obj = form.save(commit=False)
             obj.user = request.user
             obj.save()
+            form.save_m2m()
             messages.success(request, 'Habit created!')
             return redirect('tasks:habit_list')
     else:
@@ -217,6 +232,7 @@ def note_create(request):
             obj = form.save(commit=False)
             obj.user = request.user
             obj.save()
+            form.save_m2m()
             messages.success(request, 'Note created!')
             return redirect('tasks:note_list')
     else:
@@ -231,6 +247,7 @@ def event_create(request):
             obj = form.save(commit=False)
             obj.user = request.user
             obj.save()
+            form.save_m2m()
             messages.success(request, 'Event created!')
             return redirect('tasks:event_list')
     else:
@@ -244,7 +261,7 @@ def register(request):
             user = form.save()
             login(request, user)  
             messages.success(request, "Registration successful! Welcome!")
-            return redirect('login')  
+            return redirect('tasks:task_list')  
     else:
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})

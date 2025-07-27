@@ -3,29 +3,26 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Notes</h2>
-    <a href="{% url 'tasks:note_create' %}" class="btn btn-primary">Add Note</a>
+    {% if request.user.groups.filter(name="users").exists %}
+      <a href="{% url 'tasks:note_create' %}" class="btn btn-primary">Add Note</a>
+    {% endif %}
 </div>
 {% if notes %}
-    <div class="row row-cols-1 row-cols-md-2 g-4">
+    <ul class="list-group">
         {% for note in notes %}
-            <div class="col">
-                <div class="card h-100 shadow-sm" style="background:rgb(255, 255, 192);">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ note.title }}</h5>
-                        {% if note.tags %}
-                            <div class="mb-2">
-                                <span class="badge bg-warning text-dark">{{ note.tags }}</span>
-                            </div>
-                        {% endif %}
-                        <p class="card-text">{{ note.content|truncatechars:120 }}</p>
-                    </div>
-                    <div class="card-footer text-muted small">
-                        Created: {{ note.created|date:"M d, Y H:i" }}
-                    </div>
+            <li class="list-group-item d-flex justify-content-between align-items-center mb-2">
+                <span>{{ note.title }}</span>
+                <div class="d-flex align-items-center">
+                    {% if request.user.groups.filter(name__in=["admin","dev"]).exists %}
+                      <form action="{% url 'tasks:note_delete' note.pk %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                      </form>
+                    {% endif %}
                 </div>
-            </div>
+            </li>
         {% endfor %}
-    </div>
+    </ul>
 {% else %}
     <div class="alert alert-info text-center">
         No notes yet.

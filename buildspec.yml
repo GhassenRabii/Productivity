@@ -11,18 +11,20 @@ phases:
     runtime-versions:
       python: 3.10
     commands:
-      - echo "Entering source directory…"
+      - echo "Installing dependencies…"
+      - pip install --upgrade pip
       - cd $CODEBUILD_SRC_DIR
+      - pip install -r requirements.txt
+
+  pre_build:
+    commands:
+      - echo "Entering source directory…"
+      - cd $CODEBUILD_SRC_DIR                # ensure we’re in the Git checkout
       - echo "Configuring authenticated Git remote…"
       - git remote remove origin || true
       - git remote add origin "https://${GITHUB_TOKEN}@${GITHUB_REPO}"
       - git fetch origin main
 
-  pre_build:
-    commands:
-      - echo "Configuring Git remote for authenticated pushes…"
-      - git remote set-url origin "https://${GITHUB_TOKEN}@${GITHUB_REPO}"
-      - git fetch origin main
 
   build:
     commands:

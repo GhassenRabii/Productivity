@@ -45,3 +45,9 @@ phases:
         else
           echo "✅ No new migrations."
         fi
+
+artifacts:
+  files:
+    - '**/*'
+  files:
+    - '**/*'

@@ -4,7 +4,7 @@ os: linux
 files:
   - source: /
     destination: /home/ec2-user/djangoapp
-
+    overwrite: true
 hooks:
   AfterInstall:
     - location: scripts/deploy.sh

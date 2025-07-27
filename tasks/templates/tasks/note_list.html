@@ -1,9 +1,10 @@
 {% extends "tasks/base.html" %}
+{% load group_tags %}
 {% block title %}Notes{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Notes</h2>
-    {% if request.user.groups.filter(name="users").exists %}
+    {% if in_group request.user "users" %}
       <a href="{% url 'tasks:note_create' %}" class="btn btn-primary">Add Note</a>
     {% endif %}
 </div>
@@ -13,7 +14,7 @@
             <li class="list-group-item d-flex justify-content-between align-items-center mb-2">
                 <span>{{ note.title }}</span>
                 <div class="d-flex align-items-center">
-                    {% if request.user.groups.filter(name__in=["admin","dev"]).exists %}
+                    {% if in_groups request.user "admin" "dev" %}
                       <form action="{% url 'tasks:note_delete' note.pk %}" method="post" style="display:inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>

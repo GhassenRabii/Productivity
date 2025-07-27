@@ -18,6 +18,7 @@ class Task(models.Model):
     tags = models.CharField(max_length=100, blank=True, help_text="Comma-separated tags, e.g. Work, Personal")
     recurring = models.BooleanField(default=False)
     notes = models.TextField(blank=True)
+    groups = models.ManyToManyField(Group, blank=True, related_name='tasks')
 
     def __str__(self):
         return self.title

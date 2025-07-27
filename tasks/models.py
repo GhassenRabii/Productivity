@@ -39,6 +39,7 @@ class Habit(models.Model):
     last_modified = models.DateTimeField(auto_now=True)
     notes = models.TextField(blank=True)
     tags = models.CharField(max_length=100, blank=True, help_text="Comma-separated tags, e.g. Ideas, Work")
+    groups = models.ManyToManyField(Group, blank=True, related_name='habits')
 
     def __str__(self):
         return self.name
@@ -51,7 +52,8 @@ class Note(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
     tags = models.CharField(max_length=100, blank=True, help_text="Comma-separated tags, e.g. Ideas, Work")
-
+    groups = models.ManyToManyField(Group, blank=True, related_name='notes')
+    
     def __str__(self):
         return self.title
 
@@ -66,6 +68,7 @@ class Event(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
     tags = models.CharField(max_length=100, blank=True, help_text="Comma-separated tags, e.g. Meeting, Personal")
-
+    groups = models.ManyToManyField(Group, blank=True, related_name='events')
+    
     def __str__(self):
         return f"{self.title} ({self.event_date.strftime('%Y-%m-%d %H:%M')})"

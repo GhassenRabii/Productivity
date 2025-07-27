@@ -2,29 +2,16 @@ from django import template
 
 register = template.Library()
 
-@register.simple_tag
+@register.filter
 def in_group(user, group_name):
-    """
-    Returns True if the user is authenticated and belongs to the given group.
-    Usage in templates:
-        {% load group_tags %}
-        {% if in_group request.user "users" %}
-            ...
-        {% endif %}
-    """
-    return user.is_authenticated and user.groups.filter(name=group_name).exists()
-
-@register.simple_tag
-def in_groups(user, *group_names):
-    """
-    Returns True if the user is authenticated and belongs to any of the given groups.
-    Usage in templates:
-        {% load group_tags %}
-        {% if in_groups request.user "admin" "dev" %}
-            ...
-        {% endif %}
-    """
-    return (
-        user.is_authenticated
-        and user.groups.filter(name__in=group_names).exists()
+    return bool(
+        getattr(user, 'is_authenticated', False)
+        and user.groups.filter(name=group_name).exists()
     )
+
+@register.filter
+def in_groups(user, group_names):
+    if not getattr(user, 'is_authenticated', False):
+        return False
+    names = [name.strip() for name in group_names.split(',') if name.strip()]
+    return user.groups.filter(name__in=names).exists()

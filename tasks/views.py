@@ -2,7 +2,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User, Group
 from django.core.paginator import Paginator
 from .models import Task, Habit, Note, Event
@@ -13,6 +13,20 @@ from rest_framework import permissions, generics, pagination
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+
+# Decorators for group-based access
+
+def in_group(group_name, login_url='no-access'):
+    return user_passes_test(
+        lambda u: u.is_authenticated and u.groups.filter(name=group_name).exists(),
+        login_url=login_url
+    )
+
+def in_groups(group_names, login_url='no-access'):
+    return user_passes_test(
+        lambda u: u.is_authenticated and u.groups.filter(name__in=group_names).exists(),
+        login_url=login_url
+    )
 
 # --- API PAGINATION ---
 class StandardResultsSetPagination(pagination.PageNumberPagination):
@@ -42,6 +56,9 @@ class UserRegisterSerializer(ModelSerializer):
         user = User(username=validated_data['username'])
         user.set_password(validated_data['password'])
         user.save()
+        # assign default group
+        default_group, _ = Group.objects.get_or_create(name='users')
+        user.groups.add(default_group)
         return user
 
 class UserRegisterAPI(generics.CreateAPIView):
@@ -50,10 +67,8 @@ class UserRegisterAPI(generics.CreateAPIView):
 # --- PERMISSIONS ---
 class IsOwnerOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request
         if request.method in permissions.SAFE_METHODS:
             return True
-        # Write permissions are only allowed to the owner (superusers can do anything)
         return obj.user == request.user or request.user.is_superuser
 
 # --- TASKS API ---
@@ -148,7 +163,7 @@ class EventDetailAPI(generics.RetrieveUpdateDestroyAPIView):
             return Event.objects.filter(user=self.request.user)
         return Event.objects.none()
 
-# --- WEB VIEWS WITH FEEDBACK AND USER DATA ---
+# --- WEB VIEWS WITH FEEDBACK, USER DATA, AND DELETE ACTIONS ---
 @login_required
 def task_list(request):
     user = request.user
@@ -170,7 +185,6 @@ def habit_list(request):
     page       = request.GET.get('page')
     habits_page= paginator.get_page(page)
     return render(request, 'tasks/habit_list.html', {'habits': habits_page})
-
 
 @login_required
 def note_list(request):
@@ -210,6 +224,16 @@ def task_create(request):
     return render(request, 'tasks/task_form.html', {'form': form})
 
 @login_required
+@in_groups(['admin', 'dev'])
+def task_delete(request, pk):
+    task = get_object_or_404(Task, pk=pk)
+    if request.method == 'POST':
+        task.delete()
+        messages.success(request, 'Task deleted!')
+        return redirect('tasks:task_list')
+    return render(request, 'tasks/task_confirm_delete.html', {'task': task})
+
+@login_required
 def habit_create(request):
     if request.method == 'POST':
         form = HabitForm(request.POST)
@@ -223,6 +247,16 @@ def habit_create(request):
     else:
         form = HabitForm()
     return render(request, 'tasks/habit_form.html', {'form': form})
+
+@login_required
+@in_groups(['admin', 'dev'])
+def habit_delete(request, pk):
+    habit = get_object_or_404(Habit, pk=pk)
+    if request.method == 'POST':
+        habit.delete()
+        messages.success(request, 'Habit deleted!')
+        return redirect('tasks:habit_list')
+    return render(request, 'tasks/habit_confirm_delete.html', {'habit': habit})
 
 @login_required
 def note_create(request):
@@ -240,6 +274,16 @@ def note_create(request):
     return render(request, 'tasks/note_form.html', {'form': form})
 
 @login_required
+@in_groups(['admin', 'dev'])
+def note_delete(request, pk):
+    note = get_object_or_404(Note, pk=pk)
+    if request.method == 'POST':
+        note.delete()
+        messages.success(request, 'Note deleted!')
+        return redirect('tasks:note_list')
+    return render(request, 'tasks/note_confirm_delete.html', {'note': note})
+
+@login_required
 def event_create(request):
     if request.method == 'POST':
         form = EventForm(request.POST)
@@ -254,18 +298,26 @@ def event_create(request):
         form = EventForm()
     return render(request, 'tasks/event_form.html', {'form': form})
 
+@login_required
+@in_groups(['admin', 'dev'])
+def event_delete(request, pk):
+    event = get_object_or_404(Event, pk=pk)
+    if request.method == 'POST':
+        event.delete()
+        messages.success(request, 'Event deleted!')
+        return redirect('tasks:event_list')
+    return render(request, 'tasks/event_confirm_delete.html', {'event': event})
+
 def register(request):
     if request.method == "POST":
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Add the new user to your default group
             default_group, _ = Group.objects.get_or_create(name='users')
             user.groups.add(default_group)
-            login(request, user)  
+            login(request, user)
             messages.success(request, "Registration successful! Welcome!")
-            return redirect('tasks:task_list')  
+            return redirect('tasks:task_list')
     else:
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
-

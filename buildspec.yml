@@ -12,7 +12,9 @@ phases:
     commands:
       - echo "Installing dependencies…"
       - pip install --upgrade pip
-      - pip install -r djangoapp/requirements.txt
+      - cd djangoapp
+      - pip install -r requirements.txt
+      - cd ..
 
   pre_build:
     commands:

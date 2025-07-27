@@ -4,10 +4,12 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Tasks</h2>
-    {% if in_group request.user "users" %}
+    {# Use the filter syntax: user|in_group:"users" #}
+    {% if request.user|in_group:"users" %}
       <a href="{% url 'tasks:task_create' %}" class="btn btn-primary">Add Task</a>
     {% endif %}
 </div>
+
 {% if tasks %}
     <ul class="list-group">
         {% for task in tasks %}
@@ -29,7 +31,8 @@
                     <span class="badge bg-{% if task.completed %}success{% else %}secondary{% endif %} ms-md-2 me-3">
                         {% if task.completed %}Completed{% else %}Incomplete{% endif %}
                     </span>
-                    {% if in_groups request.user "admin" "dev" %}
+                    {# For multiple groups use comma‑separated filter #}
+                    {% if request.user|in_groups:"admin,dev" %}
                       <form action="{% url 'tasks:task_delete' task.pk %}" method="post" style="display:inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>

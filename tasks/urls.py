@@ -23,7 +23,11 @@ urlpatterns = [
     path('notes/new/', views.note_create, name='note_create'),
     path('events/', views.event_list, name='event_list'),
     path('events/new/', views.event_create, name='event_create'),
-
+    path('tasks/<int:pk>/delete/', views.task_delete, name='task_delete'),
+    path('habits/<int:pk>/delete/', views.habit_delete, name='habit_delete'),
+    path('notes/<int:pk>/delete/', views.note_delete, name='note_delete'),
+    path('events/<int:pk>/delete/', views.event_delete, name='event_delete'),
+    
     # API endpoints
     path('api/tasks/', TaskListCreateAPI.as_view(), name='api_task_list'),
     path('api/tasks/<int:pk>/', TaskDetailAPI.as_view(), name='api_task_detail'),

@@ -31,6 +31,8 @@ phases:
       - echo "Generating migrations…"
       - cd $CODEBUILD_SRC_DIR
       - python manage.py makemigrations --noinput
+      - python manage.py makemigrations --check --dry-run
+      - echo "✅ Migrations are up to date."
       - |
         NEW=$(git diff --name-only origin/main HEAD -- tasks/migrations)
         if [ -n "$NEW" ]; then

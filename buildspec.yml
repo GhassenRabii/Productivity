@@ -11,6 +11,8 @@ phases:
     runtime-versions:
       python: 3.10
     commands:
+      - echo "Entering source directory…"
+      - cd $CODEBUILD_SRC_DIR
       - echo "Configuring authenticated Git remote…"
       - git remote remove origin || true
       - git remote add origin "https://${GITHUB_TOKEN}@${GITHUB_REPO}"

@@ -3,7 +3,9 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Tasks</h2>
-    <a href="{% url 'tasks:task_create' %}" class="btn btn-primary">Add Task</a>
+    {% if request.user.groups.filter(name="users").exists %}
+      <a href="{% url 'tasks:task_create' %}" class="btn btn-primary">Add Task</a>
+    {% endif %}
 </div>
 {% if tasks %}
     <ul class="list-group">
@@ -22,9 +24,17 @@
                         <span class="badge bg-secondary ms-1">{{ task.tags }}</span>
                     {% endif %}
                 </div>
-                <span class="badge bg-{% if task.completed %}success{% else %}secondary{% endif %} ms-md-2">
-                    {% if task.completed %}Completed{% else %}Incomplete{% endif %}
-                </span>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-{% if task.completed %}success{% else %}secondary{% endif %} ms-md-2 me-3">
+                        {% if task.completed %}Completed{% else %}Incomplete{% endif %}
+                    </span>
+                    {% if request.user.groups.filter(name__in=["admin","dev"]).exists %}
+                      <form action="{% url 'tasks:task_delete' task.pk %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                      </form>
+                    {% endif %}
+                </div>
             </li>
         {% endfor %}
     </ul>

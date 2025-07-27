@@ -1,20 +1,49 @@
 version: 0.2
 
+env:
+  variables:
+    GITHUB_REPO: "https://github.com/GhassenRabii/Productivity"
+  # Secure environment variables set in CodeBuild project, not in source:
+  #   GITHUB_TOKEN (GitHub PAT with content write scope)
 phases:
   install:
     runtime-versions:
       python: 3.10
     commands:
+      - echo "Installing dependencies…"
       - pip install --upgrade pip
+      - pip install -r djangoapp/requirements.txt
 
   pre_build:
     commands:
-      - echo "No pre-build steps required"
+      - echo "Checking for new migrations…"
+      - cd djangoapp
+      # Dry‑run to ensure makemigrations won't error
+      - python manage.py makemigrations --dry-run --verbosity 0
 
   build:
     commands:
-      - echo "Build complete"
+      - echo "Generating migrations…"
+      - python manage.py makemigrations --noinput
+      - |
+        # Detect added migration files
+        NEW=$(git status --porcelain tasks/migrations | awk '/^ ?A/ {print $2}')
+        if [ -n "$NEW" ]; then
+          echo "🛠 New migrations detected:"
+          echo "$NEW"
+          git config user.email "ci-bot@yourdomain.com"
+          git config user.name  "CI Bot"
+          git add tasks/migrations
+          git commit -m "ci: auto-generate migrations [skip ci]"
+          echo "Pushing to GitHub…"
+          # Use the secured env var GITHUB_TOKEN for auth
+          git push "https://${GITHUB_TOKEN}@${GITHUB_REPO}" HEAD:main
+        else
+          echo "✅ No new migrations."
+        fi
 
 artifacts:
+  files:
+    - '**/*'
   files:
     - '**/*'

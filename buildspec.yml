@@ -12,18 +12,18 @@ phases:
     commands:
       - echo "Installing dependencies…"
       - pip install --upgrade pip
-      - cd $CODEBUILD_SRC_DIR
+      - cd $CODEBUILD_SRC_DIR/djangoapp
       - pip install -r requirements.txt
-      
+      - cd $CODEBUILD_SRC_DIR
 
   pre_build:
     commands:
       - echo "Checking for new migrations…"
-      - cd $CODEBUILD_SRC_DIR
+      - cd $CODEBUILD_SRC_DIR/djangoapp
       # Dry‑run to ensure makemigrations won't error
       - python manage.py makemigrations --dry-run --verbosity 0
 
-  build:
+build:
     commands:
       - echo "Generating migrations…"
       - python manage.py makemigrations --noinput
@@ -45,7 +45,5 @@ phases:
         fi
 
 artifacts:
-  files:
-    - '**/*'
   files:
     - '**/*'

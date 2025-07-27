@@ -6,10 +6,9 @@ env:
   # In CodeBuild console:
   #   - GITHUB_TOKEN: your PAT with repo:contents (or repo) scope
 
+
 phases:
   install:
-    runtime-versions:
-      python: 3.10
     commands:
       - echo "Installing dependencies…"
       - pip install --upgrade pip
@@ -18,38 +17,31 @@ phases:
 
   pre_build:
     commands:
-      - echo "Entering source directory…"
-      - cd $CODEBUILD_SRC_DIR                # ensure we’re in the Git checkout
-      - echo "Configuring authenticated Git remote…"
-      - git remote remove origin || true
+      - echo "Initializing Git in source directory…"
+      - cd $CODEBUILD_SRC_DIR
+      # Turn the unzipped source into a git repo
+      - git init
       - git remote add origin "https://${GITHUB_TOKEN}@${GITHUB_REPO}"
       - git fetch origin main
-
+      - git reset --hard origin/main
+      - echo "Git initialized; ready to detect migrations"
 
   build:
     commands:
       - echo "Generating migrations…"
+      - cd $CODEBUILD_SRC_DIR
       - python manage.py makemigrations --noinput
-
-      - echo "Detecting newly created migrations…"
       - |
         NEW=$(git diff --name-only origin/main HEAD -- tasks/migrations)
         if [ -n "$NEW" ]; then
           echo "🛠 New migrations detected:"
           echo "$NEW"
           git config user.email "ci-bot@yourdomain.com"
-          git config user.name "CI Bot"
+          git config user.name  "CI Bot"
           git add tasks/migrations
           git commit -m "ci: auto-generate migrations [skip ci]"
           echo "Pushing migrations to GitHub…"
-          if ! git push origin HEAD:main; then
-            echo "❌ ERROR: git push failed"
-            exit 1
-          fi
+          git push origin HEAD:main || { echo "❌ git push failed"; exit 1; }
         else
           echo "✅ No new migrations."
         fi
-
-artifacts:
-  files:
-    - '**/*'

@@ -12,14 +12,14 @@ phases:
     commands:
       - echo "Installing dependencies…"
       - pip install --upgrade pip
-      - cd $CODEBUILD_SRC_DIR/djangoapp
+      - cd $CODEBUILD_SRC_DIR
       - pip install -r requirements.txt
       - cd $CODEBUILD_SRC_DIR
 
   pre_build:
     commands:
       - echo "Checking for new migrations…"
-      - cd $CODEBUILD_SRC_DIR/djangoapp
+      - cd $CODEBUILD_SRC_DIR
       # Dry‑run to ensure makemigrations won't error
       - python manage.py makemigrations --dry-run --verbosity 0
 

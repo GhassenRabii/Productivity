@@ -82,8 +82,8 @@
       {% endif %}
     </div>
 
-    {# Only show main tabs to users in the “users” group #}
-    {% if request.user|in_group:"users" %}
+    {# Only show main tabs to authenticated users #}
+    {% if request.user.is_authenticated %}
       <ul class="nav nav-tabs justify-content-center mb-4">
           <li class="nav-item">
               <a class="nav-link {% if request.resolver_match.url_name == 'task_list' %}active{% endif %}"

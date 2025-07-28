@@ -224,7 +224,7 @@ def task_create(request):
     return render(request, 'tasks/task_form.html', {'form': form})
 
 @login_required
-@in_groups(['admin', 'dev'])
+@in_groups(['Admins', 'dev'])
 def task_delete(request, pk):
     task = get_object_or_404(Task, pk=pk)
     if request.method == 'POST':
@@ -249,7 +249,7 @@ def habit_create(request):
     return render(request, 'tasks/habit_form.html', {'form': form})
 
 @login_required
-@in_groups(['admin', 'dev'])
+@in_groups(['Admins', 'dev'])
 def habit_delete(request, pk):
     habit = get_object_or_404(Habit, pk=pk)
     if request.method == 'POST':
@@ -274,7 +274,7 @@ def note_create(request):
     return render(request, 'tasks/note_form.html', {'form': form})
 
 @login_required
-@in_groups(['admin', 'dev'])
+@in_groups(['Admins', 'dev'])
 def note_delete(request, pk):
     note = get_object_or_404(Note, pk=pk)
     if request.method == 'POST':
@@ -299,7 +299,7 @@ def event_create(request):
     return render(request, 'tasks/event_form.html', {'form': form})
 
 @login_required
-@in_groups(['admin', 'dev'])
+@in_groups(['Admins', 'dev'])
 def event_delete(request, pk):
     event = get_object_or_404(Event, pk=pk)
     if request.method == 'POST':

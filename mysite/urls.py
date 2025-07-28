@@ -21,6 +21,8 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 from django.http import HttpResponse
+from django.shortcuts import redirect
+
 
 def health_check(request):
     return HttpResponse("OK", status=200)
@@ -36,7 +38,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('', lambda request: HttpResponse("It works!"), name='home'),
+    path('', lambda request: redirect('/accounts/login/'), name='root-redirect'),,
     path('health/', health_check),
     path('admin/', admin.site.urls),
     path('tasks/', include('tasks.urls')),

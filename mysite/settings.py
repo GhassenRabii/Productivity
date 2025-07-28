@@ -104,7 +104,9 @@ REST_FRAMEWORK = {
     ],
 }
 
+LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/tasks/'
+LOGOUT_REDIRECT_URL = '/accounts/login/?next=/tasks/notes/'
 
 ROOT_URLCONF = 'mysite.urls'
 

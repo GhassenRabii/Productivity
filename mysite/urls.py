@@ -38,7 +38,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('', lambda request: redirect('/accounts/login/'), name='root-redirect'),,
+    path('', lambda request: redirect('/accounts/login/'), name='root-redirect'),
     path('health/', health_check),
     path('admin/', admin.site.urls),
     path('tasks/', include('tasks.urls')),

@@ -1,10 +1,15 @@
 {% extends "tasks/base.html" %}
+{% load group_tags %}
 {% block title %}Tasks{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Tasks</h2>
-    <a href="{% url 'tasks:task_create' %}" class="btn btn-primary">Add Task</a>
+    {# “Add Task” only for users group #}
+    {% if request.user|in_group:"users" %}
+      <a href="{% url 'tasks:task_create' %}" class="btn btn-primary">Add Task</a>
+    {% endif %}
 </div>
+
 {% if tasks %}
     <ul class="list-group">
         {% for task in tasks %}
@@ -22,9 +27,19 @@
                         <span class="badge bg-secondary ms-1">{{ task.tags }}</span>
                     {% endif %}
                 </div>
-                <span class="badge bg-{% if task.completed %}success{% else %}secondary{% endif %} ms-md-2">
-                    {% if task.completed %}Completed{% else %}Incomplete{% endif %}
-                </span>
+
+                <div class="d-flex align-items-center">
+                  <span class="badge bg-{% if task.completed %}success{% else %}secondary{% endif %} ms-md-2 me-3">
+                      {% if task.completed %}Completed{% else %}Incomplete{% endif %}
+                  </span>
+                  {# “Delete” only for admin/dev #}
+                  {% if request.user|in_groups:"admin,dev" %}
+                    <form action="{% url 'tasks:task_delete' task.pk %}" method="post" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                  {% endif %}
+                </div>
             </li>
         {% endfor %}
     </ul>

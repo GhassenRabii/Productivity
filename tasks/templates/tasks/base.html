@@ -7,12 +7,17 @@
     <!-- Bootstrap 5 CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
+
+
     <!-- Custom Styles for Unique Look & Centered Layout -->
     <style>
         body {
-            background: linear-gradient(135deg,rgb(0, 25, 50) 0%,rgb(0, 58, 145) 100%);
+            background: linear-gradient(135deg, rgb(0, 25, 50) 0%, rgb(0, 58, 145) 100%);
             min-height: 100vh;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
         }
+        
         .centered-header {
             display: flex;
             flex-direction: column;
@@ -20,46 +25,96 @@
             margin-top: 40px;
             margin-bottom: 30px;
         }
+        
         .nav-tabs {
-            background:rgb(203, 203, 203);
-            border-radius: 16px;
-            padding: 0.4rem 1.2rem;
+            background: rgb(230, 234, 242);
+            border-radius: 14px;
+            padding: 0.3rem 0.6rem;
             display: inline-flex;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: none;
+            margin-bottom: 1.1rem;
         }
+        
         .nav-tabs .nav-link {
             color: #003366 !important;
-            border: none;
+            border: none !important;
             font-weight: 500;
-            border-radius: 12px !important;
+            border-radius: 10px !important;
             margin-right: 0.5rem;
-            transition: background 0.2s;
-            background: transparent;
+            transition: background 0.18s, color 0.18s;
+            background: transparent !important;
+            padding: 6px 18px;
         }
+        
         .nav-tabs .nav-link.active {
-            background:rgb(203, 203, 203) !important;
+            background: #e2e8f0 !important;
             color: #003366 !important;
             font-weight: 700;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
+        
         .nav-tabs .nav-link:hover:not(.active) {
-            background: #f3f7ff !important;
-            color: #1a75ff !important;
+            background: #f0f4ff !important;
+            color: #195cff !important;
         }
+        
         .main-card {
             margin: 0 auto;
             float: none;
-            background:rgb(203, 203, 203);
+            background: #f8fafc;
             border-radius: 18px;
             box-shadow: 0 6px 24px rgba(0,0,0,0.13);
-            padding: 2.3rem 2rem;
+            padding: 2.1rem 2rem 1.7rem 2rem;
             max-width: 900px;
+            min-height: 370px;
         }
+        
         .footer {
-            border-radius: 18px;
+            border-radius: 14px;
             margin-top: 48px;
             background: rgb(239, 234, 234);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            font-size: 1rem;
+            padding: 20px 0 12px 0;
         }
+        
+        @media (max-width: 600px) {
+            .centered-header {
+                margin-top: 14px;
+                margin-bottom: 14px;
+            }
+            .nav-tabs {
+                padding: 0.13rem 0.15rem;
+                border-radius: 8px;
+                font-size: 1rem;
+                margin-bottom: 0.5rem;
+            }
+            .nav-tabs .nav-link {
+                font-size: 0.99rem;
+                padding: 5px 10px;
+                margin-right: 0.15rem;
+            }
+            .main-card {
+                padding: 1rem 0.3rem 1.2rem 0.3rem;
+                border-radius: 9px;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.13);
+                max-width: 100vw;
+                min-height: unset;
+            }
+            .footer {
+                border-radius: 9px;
+                margin-top: 20px;
+                font-size: 0.98rem;
+                padding: 12px 4px;
+            }
+            .container {
+                padding-left: 2px !important;
+                padding-right: 2px !important;
+                max-width: 100vw !important;
+            }
+        }
+
     </style>
     {% load group_tags %}
     {% block extra_head %}{% endblock %}

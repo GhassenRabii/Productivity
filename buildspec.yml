@@ -51,5 +51,4 @@ phases:
 artifacts:
   files:
     - '**/*'
-  files:
-    - '**/*'
+

@@ -18,16 +18,6 @@ if [ -z "${DJANGO_DB_SECRET_ARN:-}" ]; then
 fi
 
 cd "$APP_DIR"
-sudo chown -R ec2-user:ec2-user "$APP_DIR"
-
-# Clean and recreate virtualenv
-if [ -d "venv" ]; then
-  rm -rf venv
-fi
-python3 -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
 
 # --- Fetch DB credentials from AWS Secrets Manager ---
 DB_SECRET=$(aws secretsmanager get-secret-value --secret-id "$DJANGO_DB_SECRET_ARN" --region eu-central-1 --query SecretString --output text)
@@ -71,7 +61,9 @@ sudo systemctl enable gunicorn
 # Migrations are handled by run_migrations.sh (run by CodeDeploy before this script)
 
 # Collect static files
+source venv/bin/activate
 python manage.py collectstatic --noinput
+deactivate
 
 # --- Nginx setup ---
 sudo yum install -y nginx
@@ -144,8 +136,6 @@ sudo nginx -t
 sudo systemctl enable nginx
 sudo systemctl restart nginx
 sudo systemctl restart gunicorn
-
-deactivate
 
 echo "[*] Deployment script completed successfully."
 echo "[*] Remember: Superusers must be created manually for security."

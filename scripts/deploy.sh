@@ -67,8 +67,10 @@ sudo mv /tmp/gunicorn.service $GUNICORN_SVC
 sudo systemctl daemon-reload
 sudo systemctl enable gunicorn
 
-# --- Django management commands ---
-python manage.py migrate --noinput
+# --- DO NOT run migrations here! ---
+# Migrations are handled by run_migrations.sh (run by CodeDeploy before this script)
+
+# Collect static files
 python manage.py collectstatic --noinput
 
 # --- Nginx setup ---

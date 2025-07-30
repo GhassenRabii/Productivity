@@ -16,6 +16,7 @@ hooks:
     - location: scripts/run_migrations.sh      # <--- Run migrations after code is copied
       timeout: 300
       runas: ec2-user
+    
     - location: scripts/deploy.sh              # <--- Then deploy/start Gunicorn/Nginx
       timeout: 300
       runas: ec2-user

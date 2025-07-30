@@ -13,10 +13,20 @@ hooks:
       runas: ec2-user
 
   AfterInstall:
-    - location: scripts/run_migrations.sh      # <--- Run migrations after code is copied
+    - location: scripts/setup_venv.sh
       timeout: 300
       runas: ec2-user
-    
-    - location: scripts/deploy.sh              # <--- Then deploy/start Gunicorn/Nginx
+
+  ApplicationStart:
+    - location: scripts/run_migrations.sh
       timeout: 300
       runas: ec2-user
+    - location: scripts/deploy.sh
+      timeout: 600
+      runas: ec2-user
+
+ 
+   ValidateService:
+     - location: scripts/validate_service.sh
+       timeout: 60
+       runas: ec2-user

@@ -7,10 +7,7 @@ files:
     overwrite: true
 
 hooks:
-  BeforeInstall:
-    - location: scripts/clean_appdir.sh
-      timeout: 300
-      runas: ec2-user
+
 
   AfterInstall:
     - location: scripts/setup_venv.sh

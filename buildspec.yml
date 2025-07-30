@@ -10,7 +10,7 @@ phases:
   install:
     commands:
       - echo "Installing dependencies…"
-      - yum install -y jq
+      - apt-get update && apt-get install -y jq
       - pip install --upgrade pip
       - cd $CODEBUILD_SRC_DIR
       - pip install -r requirements.txt

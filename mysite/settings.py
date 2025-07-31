@@ -17,7 +17,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Allowed hosts
 ALLOWED_HOSTS = [
-    'django-postgres-db-v2.c9002ck2m8ev.eu-central-1.rds.amazonaws.com',
+    'django-albv2-1442787281.eu-central-1.elb.amazonaws.com',
     'productivity.dunedivision.com',
     'localhost',
     '127.0.0.1',
@@ -26,7 +26,7 @@ ALLOWED_HOSTS = [
 
 # CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
-    "django-postgres-db-v2.c9002ck2m8ev.eu-central-1.rds.amazonaws.com",
+    "django-albv2-1442787281.eu-central-1.elb.amazonaws.com",
     "https://productivity.dunedivision.com"
 ]
 

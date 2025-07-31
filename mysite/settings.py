@@ -26,7 +26,7 @@ ALLOWED_HOSTS = [
 
 # CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
-    "django-albv2-1442787281.eu-central-1.elb.amazonaws.com",
+    "https://django-albv2-1442787281.eu-central-1.elb.amazonaws.com",
     "https://productivity.dunedivision.com"
 ]
 

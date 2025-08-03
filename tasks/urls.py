@@ -1,4 +1,4 @@
-from django.urls import path
+ from django.urls import path
 from . import views
 from django.views.generic import TemplateView
 from .views import root_redirect
@@ -18,7 +18,7 @@ app_name = "tasks"
 
 urlpatterns = [
     # HTML views
-    path('no-access/', TemplateView.as_view(template_name='no_access.html'), name='no-access'),
+    path('no-access/', TemplateView.as_view(template_name='tasks/no_access.html'), name='no-access'),
     path('', views.task_list, name='task_list'),
     path('new/', views.task_create, name='task_create'),
     path('habits/', views.habit_list, name='habit_list'),

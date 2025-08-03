@@ -17,16 +17,16 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Allowed hosts
 ALLOWED_HOSTS = [
-    'django-albv2-1442787281.eu-central-1.elb.amazonaws.com',
+    'django-albv2-1620044498.eu-central-1.elb.amazonaws.com',
     'productivity.dunedivision.com',
     'localhost',
     '127.0.0.1',
-    '10.10.101.39'
+    '10.10.101.32'
 ]
 
 # CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
-    "https://django-albv2-1442787281.eu-central-1.elb.amazonaws.com",
+    "https://django-albv2-1620044498.eu-central-1.elb.amazonaws.com",
     "https://productivity.dunedivision.com"
 ]
 

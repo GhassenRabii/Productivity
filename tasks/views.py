@@ -19,13 +19,13 @@ def root_redirect(request):
 
 # Decorators for group-based access
 
-def in_group(group_name, login_url='no-access'):
+def in_group(group_name, login_url='tasks:no-access'):
     return user_passes_test(
         lambda u: u.is_authenticated and u.groups.filter(name=group_name).exists(),
         login_url=login_url
     )
 
-def in_groups(group_names, login_url='no-access'):
+def in_groups(group_names, login_url='tasks:no-access'):
     return user_passes_test(
         lambda u: u.is_authenticated and u.groups.filter(name__in=group_names).exists(),
         login_url=login_url

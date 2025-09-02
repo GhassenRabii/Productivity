@@ -17,7 +17,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Allowed hosts
 ALLOWED_HOSTS = [
-    'django-albv2-1620044498.eu-central-1.elb.amazonaws.com',
+    'django-albv2-2097968036.eu-central-1.elb.amazonaws.com',
     'productivity.dunedivision.com',
     'localhost',
     '127.0.0.1',

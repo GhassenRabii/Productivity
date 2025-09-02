@@ -21,7 +21,7 @@ ALLOWED_HOSTS = [
     'productivity.dunedivision.com',
     'localhost',
     '127.0.0.1',
-    '10.10.101.32'
+    '10.10.102.83'
 ]
 
 # CSRF trusted origins

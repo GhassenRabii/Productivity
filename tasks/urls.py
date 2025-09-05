@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from django.views.generic import TemplateView
 from .views import root_redirect
+from mozilla_django_oidc import views as oidc_views
 
 
 
@@ -18,6 +19,9 @@ app_name = "tasks"
 
 urlpatterns = [
     # HTML views
+    path("oidc/authenticate/", oidc_views.OIDCAuthenticationRequestView.as_view(), name="oidc_authenticate"),
+    path("oidc/callback/",     oidc_views.OIDCAuthenticationCallbackView.as_view(), name="oidc_callback"),
+    path("oidc/logout/",       oidc_views.OIDCLogoutView.as_view(), name="oidc_logout"),
     path('no-access/', TemplateView.as_view(template_name='tasks/no_access.html'), name='no-access'),
     path('', views.task_list, name='task_list'),
     path('new/', views.task_create, name='task_create'),

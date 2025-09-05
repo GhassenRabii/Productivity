@@ -1,4 +1,6 @@
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 from .models import Task, Habit, Note, Event
 
 class TaskForm(forms.ModelForm):
@@ -22,6 +24,16 @@ class TaskForm(forms.ModelForm):
         help_texts = {
             'tags': "You can add multiple tags separated by commas.",
         }
+
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+    phone = forms.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ("username", "email", "phone", "password1", "password2")
+
+
 
 class HabitForm(forms.ModelForm):
     last_done = forms.DateField(

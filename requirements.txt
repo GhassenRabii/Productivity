@@ -12,3 +12,4 @@ psycopg2-binary
 gunicorn
 django-cors-headers
 mozilla-django-oidc
+python-dotenv

@@ -13,6 +13,62 @@ from rest_framework import permissions, generics, pagination
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+from .forms import RegisterForm
+
+logger = logging.getLogger(__name__)
+
+def _cognito():
+    return boto3.client("cognito-idp", region_name=settings.AWS_REGION)
+
+def register(request):
+    if request.method == "POST":
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data["username"].strip()
+            email    = form.cleaned_data["email"].strip().lower()
+            phone    = form.cleaned_data["phone"].strip()
+            password = form.cleaned_data["password1"]
+
+            # 1) Create user in Cognito (triggers SES/SNS verification)
+            client = _cognito()
+            try:
+                client.sign_up(
+                    ClientId=settings.COGNITO_APP_CLIENT_ID,  # app client WITHOUT secret
+                    Username=username,
+                    Password=password,
+                    UserAttributes=[
+                        {"Name": "email", "Value": email},
+                        {"Name": "phone_number", "Value": phone},
+                    ],
+                )
+            except client.exceptions.UsernameExistsException:
+                form.add_error("username", "That username already exists.")
+                return render(request, "registration/register.html", {"form": form})
+            except client.exceptions.InvalidPasswordException as e:
+                form.add_error("password1", f"Password policy not met: {e}")
+                return render(request, "registration/register.html", {"form": form})
+            except Exception as e:
+                logger.error("Cognito sign_up error: %s", e, exc_info=True)
+                messages.error(request, "Could not register right now. Please try again.")
+                return render(request, "registration/register.html", {"form": form})
+
+            # 2) Ensure local Django user exists (for sessions/permissions)
+            user, _ = User.objects.get_or_create(username=username, defaults={"email": email})
+            if user.email != email:
+                user.email = email
+                user.save()
+
+            # 3) Add default group locally (optional)
+            default_group, _ = Group.objects.get_or_create(name="users")
+            user.groups.add(default_group)
+
+            # 4) Ask user to confirm the code sent by email/SMS
+            messages.success(request, "We sent you a verification code (email/SMS). Please confirm.")
+            return redirect("confirm")  # make sure you have a confirm view/url
+    else:
+        form = RegisterForm()
+
+    return render(request, "registration/register.html", {"form": form})
 
 def root_redirect(request):
     return redirect('/accounts/login/')

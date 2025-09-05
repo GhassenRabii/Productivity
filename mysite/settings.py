@@ -1,16 +1,13 @@
 import os
 import sys
 from pathlib import Path
-from dotenv import load_dotenv
-
-# Load environment variables (from deploy.sh -> .env)
-load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Secret key and debug
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'changeme-in-production')
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
+DEBUG = True
+#DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
 
 # Static and media
 STATIC_URL = '/static/'
@@ -20,11 +17,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Allowed hosts
 ALLOWED_HOSTS = [
-    'django-albv2-2097968036.eu-central-1.elb.amazonaws.com',
+    'django-albv2-1620044498.eu-central-1.elb.amazonaws.com',
     'productivity.dunedivision.com',
     'localhost',
     '127.0.0.1',
-    '10.10.102.83'
+    '10.10.101.32'
 ]
 
 # CSRF trusted origins
@@ -36,6 +33,7 @@ CSRF_TRUSTED_ORIGINS = [
 # Security for production/HTTPS
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 if not DEBUG:
@@ -48,7 +46,7 @@ else:
 
 # Application definition
 INSTALLED_APPS = [
-    'corsheaders',
+    'corsheaders',  # Add this at the top
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -58,12 +56,11 @@ INSTALLED_APPS = [
     'tasks',
     'rest_framework',
     'rest_framework.authtoken',
-    'drf_yasg',
-    'mozilla_django_oidc'
+    'drf_yasg'
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Add this at the top
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -73,14 +70,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS config
+# CORS config (secure - only allow your prod domain)
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "https://productivity.dunedivision.com",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# Swagger (drf-yasg)
+# Swagger (drf-yasg) HTTPS config
 SWAGGER_SETTINGS = {
     "DEFAULT_API_URL": "https://productivity.dunedivision.com",
     "USE_SESSION_AUTH": False,
@@ -93,7 +90,6 @@ SWAGGER_SETTINGS = {
     },
 }
 
-# DRF defaults
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
@@ -104,10 +100,9 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Auth / login
-LOGIN_URL = '/oidc/authenticate/'        # changed to OIDC
+LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/tasks/'
-LOGOUT_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/accounts/login/?next=/tasks/notes/'
 
 ROOT_URLCONF = 'mysite.urls'
 
@@ -128,7 +123,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
-# Database (Postgres)
+# Database (use PostgreSQL via env vars)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -165,11 +160,11 @@ USE_TZ = True
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Security headers
+# XSS & content security
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
-# Logging
+# Logging configuration for AWS/production
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -190,6 +185,13 @@ LOGGING = {
             'stream': sys.stdout,
             'formatter': 'verbose',
         },
+        # Uncomment below to log to a file (optional)
+        # 'file': {
+        #     'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+        #     'class': 'logging.FileHandler',
+        #     'filename': os.path.join(BASE_DIR, 'django.log'),
+        #     'formatter': 'verbose',
+        # },
     },
     'loggers': {
         'django': {
@@ -213,29 +215,3 @@ LOGGING = {
         },
     },
 }
-
-# -----------------------------------------------------------------
-# Cognito OIDC integration
-# -----------------------------------------------------------------
-AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",  # keep default
-    "tasks.auth.MyOIDCBackend",                   # custom OIDC backend
-]
-
-# Values from CloudFormation outputs (deploy.sh should write these to .env)
-AWS_REGION = os.environ.get("AWS_REGION", "eu-central-1")
-COGNITO_USER_POOL_ID = os.environ.get("COGNITO_USER_POOL_ID")
-COGNITO_CLIENT_ID = os.environ.get("COGNITO_CLIENT_ID")
-COGNITO_CLIENT_SECRET = os.environ.get("COGNITO_CLIENT_SECRET")
-COGNITO_DOMAIN_PREFIX = os.environ.get("COGNITO_DOMAIN_PREFIX")  # e.g. myapp-prod
-
-OIDC_OP_DISCOVERY_ENDPOINT = f"https://cognito-idp.{AWS_REGION}.amazonaws.com/{COGNITO_USER_POOL_ID}/.well-known/openid-configuration"
-OIDC_RP_CLIENT_ID = COGNITO_CLIENT_ID
-OIDC_RP_CLIENT_SECRET = COGNITO_CLIENT_SECRET
-OIDC_RP_SCOPES = "openid email phone profile"
-OIDC_STORE_ID_TOKEN = True
-OIDC_STORE_ACCESS_TOKEN = True
-
-# Hosted UI logout endpoint
-if COGNITO_DOMAIN_PREFIX:
-    OIDC_OP_LOGOUT_ENDPOINT = f"https://{COGNITO_DOMAIN_PREFIX}.auth.{AWS_REGION}.amazoncognito.com/logout"

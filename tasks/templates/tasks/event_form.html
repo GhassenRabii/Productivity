@@ -1,0 +1,41 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}Add New Event{% endblock %}
+
+{% block content %}
+<h2>Add New Event</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="mb-3">
+        {{ form.title.label_tag }} {{ form.title }}
+        {{ form.title.errors }}
+    </div>
+    <div class="mb-3">
+        {{ form.event_date.label_tag }} {{ form.event_date }}
+        {{ form.event_date.errors }}
+    </div>
+    <div class="mb-3">
+        {{ form.location.label_tag }} {{ form.location }}
+        {{ form.location.errors }}
+    </div>
+    <div class="mb-3">
+        {{ form.description.label_tag }} {{ form.description }}
+        {{ form.description.errors }}
+    </div>
+    <div class="mb-3">
+        {{ form.reminder.label_tag }} {{ form.reminder }}
+        {{ form.reminder.errors }}
+    </div>
+    <div class="mb-3">
+        {{ form.tags.label_tag }} {{ form.tags }}
+        {{ form.tags.errors }}
+    </div>
+    <div class="mb-3">
+        {{ form.groups.label_tag }}<br>
+        {{ form.groups }}
+        {{ form.groups.errors }}
+    </div>
+    <button type="submit" class="btn btn-success">Save</button>
+</form>
+{% endblock %}

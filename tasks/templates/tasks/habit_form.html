@@ -1,0 +1,26 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}Add New Habit{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <h2 class="mb-3">Add New Habit</h2>
+  <form method="post" class="card p-4 shadow-sm" style="background:rgb(235, 238, 255); max-width: 600px;">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="mb-3">
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.help_text %}
+          <div class="form-text">{{ field.help_text }}</div>
+        {% endif %}
+        {% for error in field.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Save Habit</button>
+    <a href="{% url 'tasks:habit_list' %}" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+{% endblock %}

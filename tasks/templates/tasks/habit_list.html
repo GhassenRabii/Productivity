@@ -1,0 +1,47 @@
+{% extends "tasks/base.html" %}
+{% load group_tags %}
+{% block title %}Habits{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Habits</h2>
+    {# “Add Habit” only for users group #}
+    {% if request.user|in_group:"users" %}
+      <a href="{% url 'tasks:habit_create' %}" class="btn btn-primary">Add Habit</a>
+    {% endif %}
+</div>
+
+{% if habits %}
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        {% for habit in habits %}
+            <div class="col">
+                <div class="card shadow-sm" style="background:rgb(184, 203, 255);">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-2">{{ habit.name }}</h5>
+                        <p class="card-text mb-1"><strong>Frequency:</strong> {{ habit.frequency }}</p>
+                        <p class="card-text mb-1"><strong>Streak:</strong> {{ habit.streak }}</p>
+                        <p class="card-text mb-1"><strong>Last done:</strong> {{ habit.last_done|default:"Never" }}</p>
+                        {% if habit.tags %}
+                          <p class="mb-1"><span class="badge bg-info">{{ habit.tags }}</span></p>
+                        {% endif %}
+                        {% if habit.notes %}
+                          <p class="card-text"><em>{{ habit.notes }}</em></p>
+                        {% endif %}
+
+                        {# “Delete” only for admin/dev, aligned bottom-right #}
+                        {% if request.user|in_groups:"admin,dev" %}
+                          <form action="{% url 'tasks:habit_delete' habit.pk %}" method="post" class="mt-auto text-end">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                          </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info text-center">
+        No habits yet.
+    </div>
+{% endif %}
+{% endblock %}

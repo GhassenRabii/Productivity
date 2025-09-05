@@ -2,6 +2,24 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Task, Habit, Note, Event
+from django.core.validators import RegexValidator
+
+phone_validator = RegexValidator(
+    r'^\+?[1-9]\d{7,14}$', "Use E.164, e.g. +15551234567."
+)
+
+class RegisterForm(forms.Form):
+    username  = forms.CharField(max_length=150)
+    email     = forms.EmailField(required=True)
+    phone     = forms.CharField(required=True, validators=[phone_validator])
+    password1 = forms.CharField(widget=forms.PasswordInput)
+    password2 = forms.CharField(widget=forms.PasswordInput)
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("password1") != cleaned.get("password2"):
+            self.add_error("password2", "Passwords do not match.")
+        return cleaned
 
 class TaskForm(forms.ModelForm):
     due_date = forms.DateTimeField(

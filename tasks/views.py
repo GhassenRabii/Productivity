@@ -367,16 +367,4 @@ def event_delete(request, pk):
         return redirect('tasks:event_list')
     return render(request, 'tasks/event_confirm_delete.html', {'event': event})
 
-def register(request):
-    if request.method == "POST":
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            default_group, _ = Group.objects.get_or_create(name='users')
-            user.groups.add(default_group)
-            login(request, user)
-            messages.success(request, "Registration successful! Welcome!")
-            return redirect('tasks:task_list')
-    else:
-        form = UserCreationForm()
-    return render(request, 'registration/register.html', {'form': form})
+

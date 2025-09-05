@@ -1,6 +1,12 @@
 {% extends "tasks/base.html" %}
+
 {% block content %}
-  <h2>Login</h2>
-  <p>Click below to sign in with Cognito:</p>
-  <a href="{% url 'oidc_authenticate' %}" class="btn btn-primary">Login with Cognito</a>
+<div class="container mt-4">
+  <h2 class="mb-3">Login</h2>
+  <form method="post" class="needs-validation" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Login</button>
+  </form>
+</div>
 {% endblock %}

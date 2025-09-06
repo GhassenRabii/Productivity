@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User, Group
-
+from django.core.validators import RegexValidator
 # -------------- TASK MODEL --------------
 class Task(models.Model):
     PRIORITY_CHOICES = [
@@ -72,3 +72,15 @@ class Event(models.Model):
     
     def __str__(self):
         return f"{self.title} ({self.event_date.strftime('%Y-%m-%d %H:%M')})"
+phone_validator = RegexValidator(
+    regex=r'^\+?[0-9 .\-()]{7,20}$',
+    message="Enter a valid phone number."
+)
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    phone_number = models.CharField(max_length=20, blank=True, validators=[phone_validator])
+
+    def __str__(self):
+        return f"{self.user.username} Profile"

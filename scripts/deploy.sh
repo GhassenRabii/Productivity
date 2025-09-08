@@ -1,42 +1,48 @@
 #!/bin/bash
 set -euo pipefail
 
+# ------------ CONFIG ------------
+APP_DIR=/home/ec2-user/djangoapp
+REGION=eu-central-1
+GUNICORN_SVC=/etc/systemd/system/gunicorn.service
+NGINX_CONF=/etc/nginx/nginx.conf
+NGINX_DJANGO_CONF=/etc/nginx/conf.d/django.conf
+# --------------------------------
+
 source /home/ec2-user/.bash_profile
 
-APP_DIR=/home/ec2-user/djangoapp
-GUNICORN_SVC=/etc/systemd/system/gunicorn.service
-NGINX_DJANGO_CONF=/etc/nginx/conf.d/django.conf
-NGINX_CONF=/etc/nginx/nginx.conf
-REGION=eu-central-1
+echo "[*] Running as: $(whoami)"
+echo "[*] PWD: $(pwd)"
 
-echo "[*] Running as user: $(whoami)"
-echo "[*] In: $(pwd)"
+# Ensure required env vars (provided by CodeDeploy/EC2 env)
+: "${DJANGO_DB_SECRET_ARN:?ERROR: DJANGO_DB_SECRET_ARN is not set}"
 
-# Restore persisted media if you used the persistence step
+# Stop services to avoid serving half-updated code during migration
+sudo systemctl stop gunicorn 2>/dev/null || true
+sudo systemctl stop nginx 2>/dev/null || true
+
+# If you persisted media outside APP_DIR in a BeforeInstall step, restore it
 if [ -d /home/ec2-user/persist/media ]; then
   mkdir -p "$APP_DIR/media"
   rsync -a /home/ec2-user/persist/media/ "$APP_DIR/media/"
 fi
 
-# Ensure ownership
+# Own & enter app dir
 sudo chown -R ec2-user:ec2-user "$APP_DIR"
 cd "$APP_DIR"
 
-# Clean pyc just in case
+# Clean bytecode (prevents stale pyc picking old code)
 find "$APP_DIR" -name '__pycache__' -type d -exec rm -rf {} + || true
 find "$APP_DIR" -name '*.pyc' -delete || true
 
-# --- Require DB secret ---
-: "${DJANGO_DB_SECRET_ARN:?ERROR: DJANGO_DB_SECRET_ARN is not set}"
-
-# --- Virtualenv ---
+# --- Virtualenv fresh install ---
 if [ -d venv ]; then rm -rf venv; fi
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# --- DB creds from Secrets Manager ---
+# --- Fetch DB creds from AWS Secrets Manager ---
 DB_SECRET=$(aws secretsmanager get-secret-value --secret-id "$DJANGO_DB_SECRET_ARN" --region "$REGION" --query SecretString --output text)
 DB_USER=$(echo "$DB_SECRET" | python3 -c "import sys,json;print(json.load(sys.stdin)['username'])")
 DB_PASS=$(echo "$DB_SECRET" | python3 -c "import sys,json;print(json.load(sys.stdin)['password'])")
@@ -44,9 +50,25 @@ DB_HOST=$(echo "$DB_SECRET" | python3 -c "import sys,json;print(json.load(sys.st
 DB_NAME=$(echo "$DB_SECRET" | python3 -c "import sys,json;print(json.load(sys.stdin)['dbname'])")
 
 export DB_USER DB_PASSWORD="$DB_PASS" DB_HOST DB_NAME
-echo "[*] DB_USER=$DB_USER  DB_HOST=$DB_HOST  DB_NAME=$DB_NAME"
+echo "[*] DB: user=$DB_USER host=$DB_HOST name=$DB_NAME"
 
-# --- Gunicorn systemd unit ---
+# --- Django management ---
+echo "[*] Repo migrations present:"
+ls -la tasks/migrations || true
+
+echo "[*] Django check…"
+python manage.py check --deploy
+
+echo "[*] Show migrations:"
+python manage.py showmigrations tasks || true
+
+echo "[*] Apply migrations…"
+python manage.py migrate --noinput
+
+echo "[*] Collect static…"
+python manage.py collectstatic --noinput
+
+# --- (Re)write Gunicorn systemd unit AFTER migrations succeed ---
 cat > /tmp/gunicorn.service <<EOF
 [Unit]
 Description=gunicorn daemon for Django
@@ -72,27 +94,22 @@ sudo mv /tmp/gunicorn.service "$GUNICORN_SVC"
 sudo systemctl daemon-reload
 sudo systemctl enable gunicorn
 
-# --- Django mgmt ---
-echo "[*] Migrations present:"
-ls -la tasks/migrations || true
-echo "[*] Applying migrations…"
-python manage.py migrate --noinput
-echo "[*] Collecting static…"
-python manage.py collectstatic --noinput
-
-# --- Nginx ---
+# --- Nginx setup (idempotent) ---
 if ! rpm -q nginx >/dev/null 2>&1; then
   sudo yum install -y nginx
 fi
 
 sudo chmod o+x /home/ec2-user
-sudo chmod o+x /home/ec2-user/djangoapp
-sudo chmod -R 755 "$APP_DIR/static"
+sudo chmod o+x "$APP_DIR"
+mkdir -p "$APP_DIR/static" "$APP_DIR/media"
+sudo chmod -R 755 "$APP_DIR/static" "$APP_DIR/media"
 sudo chown -R ec2-user:nginx "$APP_DIR/static"
 
+# keep only our site conf in conf.d
 sudo find /etc/nginx/conf.d/ ! -name 'django.conf' -type f -delete || true
 
-sudo cp "$NGINX_CONF" "$NGINX_CONF.bak" || true
+# main nginx.conf
+sudo cp "$NGINX_CONF" "$NGINX_CONF.bak" 2>/dev/null || true
 sudo tee "$NGINX_CONF" > /dev/null <<'EOF'
 user nginx;
 worker_processes auto;
@@ -118,6 +135,7 @@ http {
 }
 EOF
 
+# site config
 sudo tee "$NGINX_DJANGO_CONF" > /dev/null <<EOF
 server {
     listen 80;
@@ -142,7 +160,8 @@ server {
 EOF
 
 sudo nginx -t
-sudo systemctl enable nginx
+
+# --- Start services (new code + migrated DB) ---
 sudo systemctl restart nginx
 sudo systemctl restart gunicorn
 

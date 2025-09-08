@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'tasks',
     'rest_framework',
     'rest_framework.authtoken',
+    "tasks.apps.TasksConfig",
     'drf_yasg'
 ]
 

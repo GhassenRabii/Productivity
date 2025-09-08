@@ -2,60 +2,39 @@ version: 0.2
 
 env:
   variables:
-    GITHUB_REPO: "github.com/GhassenRabii/Productivity"
-    # DJANGO_DB_SECRET_ARN and DJANGO_DB_HOST are injected from CloudFormation or CodePipeline
-    # GITHUB_TOKEN is also injected securely as a parameter
+    # If you need any Django env vars for settings, add them here.
+    # DJANGO_SETTINGS_MODULE: "mysite.settings"
+    # You do NOT need DB creds just to check migrations.
+    PIP_NO_CACHE_DIR: "1"
 
 phases:
   install:
     commands:
       - echo "Installing dependencies…"
-      - apt-get update && apt-get install -y jq
       - pip install --upgrade pip
-      - cd $CODEBUILD_SRC_DIR
       - pip install -r requirements.txt
 
   pre_build:
     commands:
-      - echo "Initializing Git in source directory…"
-      - cd $CODEBUILD_SRC_DIR
-      - git init
-      - git remote add origin "https://${GITHUB_TOKEN}@${GITHUB_REPO}"
-      - git fetch origin main
-      - git reset --hard origin/main
-
-      - echo "Fetching DB secrets from AWS Secrets Manager…"
-      - |
-        SECRET=$(aws secretsmanager get-secret-value --secret-id "$DJANGO_DB_SECRET_ARN" --query SecretString --output text)
-        export DB_NAME=$(echo $SECRET | jq -r .dbname)
-        export DB_USER=$(echo $SECRET | jq -r .username)
-        export DB_PASSWORD=$(echo $SECRET | jq -r .password)
-        export DB_PORT=$(echo $SECRET | jq -r .port)
-        export DB_HOST=$DJANGO_DB_HOST
+      - echo "Verifying that migrations are committed (no generation in CI)…"
+      # This exits non-zero if Django detects model changes that would create a migration.
+      - python manage.py makemigrations --check --dry-run
+      - echo "✅ Migrations are up to date."
+      # Optional: quick sanity check
+      - python manage.py showmigrations tasks || true
 
   build:
     commands:
-      - echo "Generating migrations…"
-      - cd $CODEBUILD_SRC_DIR
-      - python manage.py makemigrations --noinput
-      - python manage.py makemigrations --check --dry-run
-      - echo "✅ Migrations are up to date."
-
-      - |
-        NEW=$(git diff --name-only origin/main HEAD -- tasks/migrations)
-        if [ -n "$NEW" ]; then
-          echo "🛠 New migrations detected:"
-          echo "$NEW"
-          git config user.email "ci-bot@yourdomain.com"
-          git config user.name  "CI Bot"
-          git add tasks/migrations
-          git commit -m "ci: auto-generate migrations [skip ci]"
-          echo "Pushing migrations to GitHub…"
-          git push origin HEAD:main || { echo "❌ git push failed"; exit 1; }
-        else
-          echo "✅ No new migrations."
-        fi
+      # Optional: run tests; if you use DB, point tests to sqlite or a test DB
+      # - python manage.py test -q
+      - echo "Build phase complete."
 
 artifacts:
   files:
     - '**/*'
+  discard-paths: no
+  exclude-paths:
+    - '.git/**'
+    - 'venv/**'
+    - '**/__pycache__/**'
+    - '.pytest_cache/**'

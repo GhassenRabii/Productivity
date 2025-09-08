@@ -4,7 +4,7 @@ os: linux
 files:
   - source: /
     destination: /home/ec2-user/djangoapp
-    overwrite: true
+file_exists_behavior: OVERWRITE
 
 hooks:
   BeforeInstall:

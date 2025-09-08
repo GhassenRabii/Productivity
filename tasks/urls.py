@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from django.views.generic import TemplateView
 from .views import root_redirect
+from .views import SignUpView
 
 
 
@@ -46,7 +47,7 @@ urlpatterns = [
     path('api/events/<int:pk>/', EventDetailAPI.as_view(), name='api_event_detail'),
     
     #User registration
-    path('api/register/', UserRegisterAPI.as_view(), name='api_register'),
+    path("register/", SignUpView.as_view(), name="register"),
     path('register/', register, name='register'),
 
     #Api links

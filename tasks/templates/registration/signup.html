@@ -1,4 +1,6 @@
 {% extends "tasks/base.html" %}
+
+{% block content %}
 <form method="post">
   {% csrf_token %}
   {{ form.non_field_errors }}
@@ -20,3 +22,4 @@
 
   <button type="submit">Register</button>
 </form>
+{% endblock %}

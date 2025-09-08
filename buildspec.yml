@@ -2,9 +2,8 @@ version: 0.2
 
 env:
   variables:
-    # If you need any Django env vars for settings, add them here.
-    # DJANGO_SETTINGS_MODULE: "mysite.settings"
-    # You do NOT need DB creds just to check migrations.
+    # Use CI settings so no RDS connection is required
+    DJANGO_SETTINGS_MODULE: "mysite.settings_ci"
     PIP_NO_CACHE_DIR: "1"
 
 phases:
@@ -13,21 +12,36 @@ phases:
       - echo "Installing dependencies…"
       - pip install --upgrade pip
       - pip install -r requirements.txt
+      # jq is optional; install if missing (works on AL2 & Ubuntu images)
+      - |
+        if ! command -v jq >/dev/null 2>&1; then
+          (sudo yum -y install jq 2>/dev/null || (sudo apt-get update -y && sudo apt-get install -y jq)) || true
+        fi
 
   pre_build:
     commands:
+      - echo "Fetching DB secrets from AWS Secrets Manager (optional for CI check)…"
+      - |
+        if [ -n "${DJANGO_DB_SECRET_ARN:-}" ]; then
+          SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id "$DJANGO_DB_SECRET_ARN" --query SecretString --output text)
+          export DB_NAME=$(echo "$SECRET_JSON" | jq -r .dbname)
+          export DB_USER=$(echo "$SECRET_JSON" | jq -r .username)
+          export DB_PASSWORD=$(echo "$SECRET_JSON" | jq -r .password)
+          export DB_PORT=$(echo "$SECRET_JSON" | jq -r .port)
+        fi
+      # If you pass DB host from CodePipeline/CFN, expose it (optional)
+      - if [ -n "${DJANGO_DB_HOST:-}" ]; then export DB_HOST="$DJANGO_DB_HOST"; fi
+
       - echo "Verifying that migrations are committed (no generation in CI)…"
-      # This exits non-zero if Django detects model changes that would create a migration.
+      # This exits non-zero if model changes would create a migration.
       - python manage.py makemigrations --check --dry-run
       - echo "✅ Migrations are up to date."
-      # Optional: quick sanity check
       - python manage.py showmigrations tasks || true
 
   build:
     commands:
-      # Optional: run tests; if you use DB, point tests to sqlite or a test DB
-      # - python manage.py test -q
-      - echo "Build phase complete."
+      - echo "Build phase complete (tests could run here if desired)."
+      # Example (optional): python manage.py test -q
 
 artifacts:
   files:

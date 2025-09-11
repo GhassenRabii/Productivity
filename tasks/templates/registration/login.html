@@ -1,9 +1,131 @@
 {% extends "tasks/base.html" %}
+
 {% block content %}
-  <h2>Login</h2>
-  <form method="post">
+<style>
+  /* Page-scoped styles for this form */
+  .auth-wrap {
+    max-width: 560px;
+    margin: 2rem auto 4rem;
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,.08);
+  }
+  .auth-title {
+    font-weight: 700;
+    font-size: 1.35rem;
+    margin: 0 0 1rem;
+    text-align: center;
+  }
+  .auth-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: .9rem;
+  }
+  @media (min-width: 720px) {
+    .auth-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .span-2 { grid-column: span 2; }
+  }
+  label {
+    display: block;
+    font-size: .92rem;
+    color: #334155;
+    margin-bottom: .35rem;
+  }
+  input {
+    width: 100%;
+    padding: .65rem .75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: .55rem;
+    outline: none;
+  }
+  input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+  }
+  .errorlist {
+    margin: .35rem 0 0;
+    padding: 0;
+    list-style: none;
+    color: #b91c1c;
+    font-size: .85rem;
+  }
+  .non-field-errors {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    padding: .75rem;
+    border-radius: .5rem;
+    margin-bottom: .75rem;
+    font-size: .9rem;
+  }
+  .btn-primary {
+    display: inline-block;
+    width: 100%;
+    padding: .75rem 1rem;
+    background: #0ea5e9;
+    color: #fff;
+    border: none;
+    border-radius: .65rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary:hover { filter: brightness(0.95); }
+  .aux {
+    margin-top: .5rem;
+    text-align: center;
+    font-size: .9rem;
+  }
+  .aux a {
+    color: #2563eb; text-decoration: none;
+  }
+  .aux a:hover { text-decoration: underline; }
+</style>
+
+<div class="auth-wrap">
+  <h2 class="auth-title">Welcome back</h2>
+
+  {% if form.non_field_errors %}
+    <div class="non-field-errors">
+      {{ form.non_field_errors }}
+    </div>
+  {% endif %}
+
+  <form method="post" novalidate>
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Login</button>
+
+    <div class="auth-grid">
+      <div class="span-2">
+        <label for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+        {{ form.username.errors }}
+      </div>
+
+      <div class="span-2">
+        <label for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+        {{ form.password.errors }}
+      </div>
+
+      {# Optional "remember me" if your form provides it #}
+      {% if form.remember %}
+      <div class="span-2" style="display:flex;align-items:center;gap:.5rem;">
+        {{ form.remember }}
+        <label for="{{ form.remember.id_for_label }}" style="margin:0;">Remember me</label>
+        {{ form.remember.errors }}
+      </div>
+      {% endif %}
+
+      <div class="span-2">
+        <button type="submit" class="btn-primary">Login</button>
+      </div>
+    </div>
   </form>
+
+  <div class="aux">
+    <a href="{% url 'password_reset' %}">Forgot your password?</a>
+  </div>
+</div>
 {% endblock %}

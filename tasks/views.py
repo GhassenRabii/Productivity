@@ -16,6 +16,28 @@ from rest_framework.reverse import reverse
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView
 from .forms import SignUpForm
+from datetime import datetime
+from .services.scheduler_api import schedule_task, SchedulerError
+
+def schedule_reminder_view(request):
+    if request.method == "POST":
+        task_id   = request.POST.get("task_id","").strip()
+        due_local = request.POST.get("due_at","").strip()   # HTML datetime-local: YYYY-MM-DDTHH:MM
+        owner_id  = request.POST.get("owner_id","").strip()
+        user_email= request.POST.get("user_email","").strip()
+
+        try:
+            # Convert "YYYY-MM-DDTHH:MM" -> ISO 8601 (UTC)
+            due_iso = datetime.fromisoformat(due_local).isoformat()
+            schedule_task(task_id, due_iso, owner_id, user_email)
+            messages.success(request, "✅ Reminder scheduled.")
+            return redirect("schedule-reminder")
+        except SchedulerError as e:
+            messages.error(request, f"Schedule failed: {e}")
+        except Exception as e:
+            messages.error(request, f"Error: {e}")
+
+    return render(request, "tasks/schedule_reminder.html")
 
 class SignUpView(CreateView):
     form_class = SignUpForm

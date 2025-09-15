@@ -3,6 +3,7 @@ from . import views
 from django.views.generic import TemplateView
 from .views import root_redirect
 from .views import SignUpView
+from .views import schedule_reminder_view
 
 
 

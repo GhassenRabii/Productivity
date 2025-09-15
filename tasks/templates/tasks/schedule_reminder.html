@@ -1,0 +1,210 @@
+{% load static %}
+
+<style>
+  :root {
+    --bg: #0b1020;
+    --card: #11182e;
+    --muted: #8fa3c8;
+    --text: #e8eefc;
+    --accent: #6aa6ff;
+    --accent-2: #7ef0d6;
+    --border: #203056;
+    --danger: #ff6584;
+    --success: #24d8a7;
+    --shadow: 0 10px 25px rgba(0,0,0,.35), 0 4px 8px rgba(0,0,0,.25);
+  }
+  .wrap {
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 2rem 1rem;
+    background: radial-gradient(1200px 600px at 10% -10%, #183054 0%, transparent 60%),
+                radial-gradient(900px 500px at 110% 10%, #0f223e 0%, transparent 60%),
+                var(--bg);
+  }
+  .card {
+    width: min(720px, 100%);
+    background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)) , var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card header {
+    padding: 1.25rem 1.25rem 0.5rem;
+  }
+  .title {
+    color: var(--text);
+    font-size: clamp(1.1rem, 1.4rem, 1.6rem);
+    font-weight: 700;
+    letter-spacing: .2px;
+    margin: 0;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: .95rem;
+    margin: .35rem 0 0;
+  }
+  form {
+    padding: 1.25rem;
+    display: grid;
+    gap: 1rem;
+  }
+  .grid {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 720px) {
+    .grid-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .field {
+    display: grid;
+    gap: .5rem;
+  }
+  label {
+    color: var(--text);
+    font-weight: 600;
+    font-size: .95rem;
+  }
+  .hint {
+    color: var(--muted);
+    font-size: .85rem;
+  }
+  input[type="text"],
+  input[type="email"],
+  input[type="datetime-local"] {
+    appearance: none;
+    width: 100%;
+    padding: .8rem .9rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #0e1730;
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .02s ease;
+  }
+  input::placeholder { color: #6e82aa; }
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(106,166,255,.18);
+  }
+  .actions {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    justify-content: flex-end;
+    padding: .25rem 0 .25rem;
+  }
+  .btn {
+    appearance: none;
+    border: none;
+    cursor: pointer;
+    padding: .9rem 1.1rem;
+    border-radius: 12px;
+    font-weight: 700;
+    color: #08111f;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    transition: transform .05s ease, filter .2s ease, box-shadow .2s ease;
+    box-shadow: 0 6px 16px rgba(106,166,255,.35);
+  }
+  .btn:hover { filter: brightness(1.06); }
+  .btn:active { transform: translateY(1px); }
+  .note {
+    color: var(--muted);
+    font-size: .85rem;
+    margin-right: auto;
+  }
+  /* Django messages */
+  .messages {
+    padding: 0 1.25rem 1rem;
+    display: grid;
+    gap: .6rem;
+  }
+  .msg {
+    border-radius: 12px;
+    padding: .75rem .9rem;
+    border: 1px solid var(--border);
+    background: #0f1b36;
+    color: var(--text);
+  }
+  .msg.success { border-color: rgba(36,216,167,.4); box-shadow: inset 0 0 0 1px rgba(36,216,167,.2); }
+  .msg.error   { border-color: rgba(255,101,132,.45); box-shadow: inset 0 0 0 1px rgba(255,101,132,.25); }
+</style>
+
+<div class="wrap">
+  <div class="card" role="region" aria-labelledby="sched-title">
+    <header>
+      <h1 id="sched-title" class="title">Schedule a Reminder</h1>
+      <p class="subtitle">Pick a due time and we’ll email the user at the right moment (respecting quiet hours).</p>
+    </header>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="grid grid-2">
+        <div class="field">
+          <label for="task_id">Task ID</label>
+          <input id="task_id" name="task_id" type="text" placeholder="e.g., task-123" required>
+          <p class="hint">A unique identifier for the task.</p>
+        </div>
+
+        <div class="field">
+          <label for="owner_id">Owner/User ID</label>
+          <input id="owner_id" name="owner_id" type="text" placeholder="e.g., user-42" required>
+          <p class="hint">Your internal user identifier.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="field">
+          <label for="user_email">User email</label>
+          <input id="user_email" name="user_email" type="email" placeholder="user@example.com" required inputmode="email" autocomplete="email">
+          <p class="hint">Where the reminder will be sent (SES must be allowed to email this address).</p>
+        </div>
+
+        <div class="field">
+          <label for="due_at">Due date & time</label>
+          <input id="due_at" name="due_at" type="datetime-local" required>
+          <p class="hint">Local time. We’ll convert to ISO and pass timezone “Europe/Berlin”.</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <span class="note">You can edit or cancel later from your Tasks view.</span>
+        <button class="btn" type="submit" id="submit-btn">
+          Schedule reminder
+        </button>
+      </div>
+    </form>
+
+    {% if messages %}
+      <div class="messages" role="status" aria-live="polite">
+        {% for m in messages %}
+          <div class="msg {% if m.tags %}{{ m.tags }}{% endif %}">{{ m }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // Optional: prevent double-submits and set min datetime to "now"
+  (function(){
+    const btn = document.getElementById('submit-btn');
+    const due = document.getElementById('due_at');
+    if (due) {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // localize
+      due.min = now.toISOString().slice(0,16); // YYYY-MM-DDTHH:MM
+    }
+    const form = document.querySelector('form[method="post"]');
+    if (form && btn) {
+      form.addEventListener('submit', () => {
+        btn.disabled = true;
+        btn.textContent = 'Scheduling…';
+      });
+    }
+  })();
+</script>

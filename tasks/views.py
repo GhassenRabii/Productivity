@@ -17,27 +17,48 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView
 from .forms import SignUpForm
 from datetime import datetime
+from django.utils import timezone
 from .services.scheduler_api import schedule_task, SchedulerError
 
 def schedule_reminder_view(request):
     if request.method == "POST":
-        task_id   = request.POST.get("task_id","").strip()
-        due_local = request.POST.get("due_at","").strip()   # HTML datetime-local: YYYY-MM-DDTHH:MM
-        owner_id  = request.POST.get("owner_id","").strip()
-        user_email= request.POST.get("user_email","").strip()
+        task_id    = (request.POST.get("task_id") or "").strip()
+        due_local  = (request.POST.get("due_at") or "").strip()      # "YYYY-MM-DDTHH:MM"
+        owner_id   = (request.POST.get("owner_id") or "").strip()
+        user_email = (request.POST.get("user_email") or "").strip()
 
         try:
-            # Convert "YYYY-MM-DDTHH:MM" -> ISO 8601 (UTC)
-            due_iso = datetime.fromisoformat(due_local).isoformat()
+            # Basic required-field checks
+            if not all([task_id, due_local, owner_id, user_email]):
+                raise ValueError("All fields are required.")
+
+            # Parse naive local time -> make aware in current TZ -> convert to UTC
+            local_dt = datetime.fromisoformat(due_local)  # naive
+            aware_local = timezone.make_aware(local_dt, timezone.get_current_timezone())
+            due_utc = aware_local.astimezone(timezone.utc)
+
+            # Must be in the future
+            if due_utc <= timezone.now():
+                raise ValueError("Due time must be in the future.")
+
+            # ISO8601 with trailing Z (Scheduler-friendly)
+            due_iso = due_utc.replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+            # Call orchestrator API
             schedule_task(task_id, due_iso, owner_id, user_email)
+
             messages.success(request, "✅ Reminder scheduled.")
             return redirect("schedule-reminder")
+
         except SchedulerError as e:
             messages.error(request, f"Schedule failed: {e}")
+        except ValueError as e:
+            messages.error(request, f"Invalid input: {e}")
         except Exception as e:
             messages.error(request, f"Error: {e}")
 
     return render(request, "tasks/schedule_reminder.html")
+
 
 class SignUpView(CreateView):
     form_class = SignUpForm

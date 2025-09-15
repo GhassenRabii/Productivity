@@ -164,6 +164,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
+# ---- Notifications API (EventBridge Scheduler) ----
+API_BASE_URL = os.environ.get(
+    "API_BASE_URL",
+    "https://<restapiid>.execute-api.eu-central-1.amazonaws.com/v1"
+)
+API_KEY = os.environ.get("API_KEY", "")  # only if you enable API keys later
+
+
 # Logging configuration for AWS/production
 LOGGING = {
     'version': 1,

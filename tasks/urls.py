@@ -53,4 +53,7 @@ urlpatterns = [
     #Api links
     path('api/', views.api_root, name='api_root'),
 
+    #schedule reminder
+    path("schedule/", schedule_reminder_view, name="schedule-reminder"),
+
 ]

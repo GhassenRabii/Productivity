@@ -1,24 +1,29 @@
+# Standard library
+from datetime import datetime, timezone
+
+# Django
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib import messages
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User, Group
 from django.core.paginator import Paginator
-from .models import Task, Habit, Note, Event
-from .forms import TaskForm, HabitForm, NoteForm, EventForm 
-from .serializers import TaskSerializer, HabitSerializer, NoteSerializer, EventSerializer
-from rest_framework.serializers import ModelSerializer
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+
+# Django REST Framework
 from rest_framework import permissions, generics, pagination
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.reverse import reverse
-from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView
-from .forms import SignUpForm
-from datetime import datetime
-from django.utils import timezone
+from rest_framework.serializers import ModelSerializer
+
+# Local
+from .models import Task, Habit, Note, Event
+from .forms import TaskForm, HabitForm, NoteForm, EventForm, SignUpForm
+from .serializers import TaskSerializer, HabitSerializer, NoteSerializer, EventSerializer
 from .services.scheduler_api import schedule_task, SchedulerError
+
 
 def schedule_reminder_view(request):
     if request.method == "POST":
